@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$']]
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="graph">
+            <h2>Harmonic Series</h2>
+            <div id="harmonics"></div>
+        </div>
+        <div class="graph">
+            <h2>Dissonance Graph</h2>
+            <div id="dissonance"></div>
+            <div class="edo-input-container">
+                <label for="base-frequency">Base frequency (Hz): </label>
+                <input type="number" id="base-frequency" min="20" max="20000" step="0.1" value="220">
+            </div>
+        </div>
+        <div class="graph">
+            <h2>EDO Alignment Error</h2>
+            <div id="edo-error"></div>
+            <div class="edo-input-container">
+                <label for="min-edo-input">Min EDO: </label>
+                <input type="number" id="min-edo-input" min="1" max="10000" value="3">
+            </div>
+            <div class="edo-input-container">
+                <label for="max-edo-input">Max EDO: </label>
+                <input type="number" id="max-edo-input" min="1" max="10000" value="53">
+            </div>
+        </div>
+        <div class="graph">
+            <h2>Harmonic Circle</h2>
+            <div id="harmonic-circle"></div>
+            <div class="edo-input-container">
+                <label for="edo-input">EDO: </label>
+                <input type="number" id="edo-input" min="5" max="100" value="12">
+            </div>
+        </div>
+    </div>
+    <div class="description">
+        <h1>Musical Harmony Analysis Tool</h1>
+        <p>This interactive tool helps explore musical harmony through four connected visualizations:</p>
+
+        <ul>
+            <li><strong>Harmonic Series:</strong> Drag the blue bars to adjust the strength of each harmonic. These changes affect how the sound will be produced.</li>
+            <li><strong>Dissonance Graph:</strong> Shows how pleasant or harsh two notes sound together at different intervals. Click anywhere on the line to hear the sound. You can change the base note frequency below the graph.</li>
+            <li><strong>EDO Error Graph:</strong> Displays how well different Equal Division of Octave (EDO) systems match our harmonic series. Common Western music uses 12-EDO. Click any point to see its representation in the circle.</li>
+                <p>The error is calculated as the weighted distance of odd harmonics to the closest EDO note:</p>
+
+                $$e = \sqrt{\sum_{k=1}^{+\infty}a_{2k-1} (x_{2k-1} - [x_{2k-1}])^2}$$
+
+                <p>where:</p>
+                <ul>
+                    <li>$a_n$ is the $n$-th harmonic amplitude</li>
+                    <li>$x_n$ is $\rm{EDO} \times (\log_2(n) \bmod 1)$</li>
+                </ul>
+            <li><strong>Harmonic Circle:</strong> Shows harmonics arranged in a circle, with colors indicating how well they match the selected EDO system (green = good match, red = poor match). Blue lines show the EDO divisions.</li>
+        </ul>
+    </div>
+    <script src="audio.js"></script>
+    <script src="dissonance.js"></script>
+    <script src="analysis.js"></script>
+</body>
+</html>
