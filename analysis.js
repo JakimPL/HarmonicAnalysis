@@ -105,7 +105,7 @@ function updateHarmonicSeries() {
                     .attr("y", y(d.amplitude) - 5)
                     .attr("text-anchor", "middle")
                     .attr("font-size", "10px")
-                    .text(`H${d.harmonic}: ${d.amplitude.toFixed(3)}`);
+                    .text(`H${d.harmonic}: ${d.amplitude.toFixed(4)}`);
             }
         })
         .on("mouseout", function(event, d) {
@@ -320,7 +320,7 @@ function updateDissonanceGraph() {
                 hoverLabel
                     .attr("x", mouseX)
                     .attr("y", yPos - 10)
-                    .text(`${ratio.toFixed(3)} : ${value.toFixed(3)}`)
+                    .text(`${ratio.toFixed(4)} : ${value.toFixed(4)}`)
                     .style("opacity", 1);
             }
         })
@@ -539,7 +539,7 @@ function updateHarmonicCircle(edo) {
                 tooltip.transition()
                     .duration(200)
                     .style("opacity", .9);
-                tooltip.html(`Note: ${i + 1}<br/>Ratio: ${ratio.toFixed(3)}`)
+                tooltip.html(`Note: ${i + 1}<br/>Ratio: ${ratio.toFixed(4)}`)
                     .style("left", (event.pageX + 10) + "px")
                     .style("top", (event.pageY - 28) + "px");
                 d3.select(this)
@@ -565,7 +565,7 @@ function updateHarmonicCircle(edo) {
         const ratio = Math.pow(2, log_harmonic);
         const note = 1.0 + log_harmonic * edo;
 
-        tooltip.html(`Harmonic: ${data.harmonic}<br/>Amplitude: ${data.amplitude.toFixed(3)}<br/>Error: ${data.error.toFixed(3)}<br/>Note: ${note.toFixed(3)}<br/>Ratio: ${ratio.toFixed(3)}`)
+        tooltip.html(`Harmonic: ${data.harmonic}<br/>Amplitude: ${data.amplitude.toFixed(4)}<br/>Error: ${data.error.toFixed(4)}<br/>Note: ${note.toFixed(4)}<br/>Ratio: ${ratio.toFixed(4)}`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 28) + "px");
     }
