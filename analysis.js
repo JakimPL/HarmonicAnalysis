@@ -486,7 +486,15 @@ function updateHarmonicCircle(edo) {
     let maxEdo = parseInt(maxEdoInput.value);
     if (maxEdo !== null && edo > maxEdo) {
         edo = maxEdo;
-   }
+    }
+
+    function playHarmonic(harmonic) {
+        const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
+        const wave = createWaveform(harmonicSeries);
+        const factor = Math.pow(2, Math.log2(harmonic) % 1);
+        const envelopedWave = applyEnvelope(wave, SOUND_DURATION, 0.5);
+        playSound(envelopedWave, baseFrequency * factor, SOUND_DURATION);
+    }
 
     const radius = (HEIGHT / 2 - MARGIN.top) * 0.75;
     const center = HEIGHT / 2;
@@ -604,11 +612,7 @@ function updateHarmonicCircle(edo) {
                     hideTooltip();
                 })
                 .on("click", function() {
-                    const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
-                    const wave = createWaveform(harmonicSeries);
-                    const factor = Math.pow(2, Math.log2(harmonic) % 1);
-                    const envelopedWave = applyEnvelope(wave, SOUND_DURATION, 0.5);
-                    playSound(envelopedWave, baseFrequency * factor, SOUND_DURATION);
+                    playHarmonic(harmonic);
                 });
 
             harmonicCircleSvg.append("text")
@@ -625,6 +629,9 @@ function updateHarmonicCircle(edo) {
                 .on("mouseout", function() {
                     line.attr("stroke-width", 4);
                     hideTooltip();
+                })
+                .on("click", function() {
+                    playHarmonic(harmonic);
                 });
         }
     });
