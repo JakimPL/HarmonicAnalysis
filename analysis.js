@@ -1,6 +1,7 @@
 const MAX_HARMONICS = 32;
 const BASE_FREQUENCY = 220;
 const EDO_LIMIT = 10000;
+const SOUND_DURATION = 2.0;
 
 const dimensions = getDimensions();
 const WIDTH = dimensions.width;
@@ -553,6 +554,12 @@ function updateHarmonicCircle(edo) {
                 d3.select(this)
                     .attr("stroke", "#13b5dc")
                     .attr("stroke-width", 3);
+            })
+            .on("click", function() {
+                const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
+                const wave = createWaveform(harmonicSeries);
+                const envelopedWave = applyEnvelope(wave);
+                playSound(envelopedWave, baseFrequency * ratio, SOUND_DURATION);
             });
     }
 
@@ -582,7 +589,7 @@ function updateHarmonicCircle(edo) {
             const error = toneError(harmonic, edo);
             const color = colorScale(error);
             const barStart = radius;
-            const barEnd = radius * (1.02 + (amplitude / maxAmplitude) * 0.5);
+            const barEnd = radius * (1.05 + (amplitude / maxAmplitude) * 0.5);
             const data = { harmonic, amplitude, error };
 
             const line = harmonicCircleSvg.append("line")
@@ -599,6 +606,13 @@ function updateHarmonicCircle(edo) {
                 .on("mouseout", function() {
                     d3.select(this).attr("stroke-width", 4);
                     hideTooltip();
+                })
+                .on("click", function() {
+                    const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
+                    const wave = createWaveform(harmonicSeries);
+                    const envelopedWave = applyEnvelope(wave);
+                    const factor = Math.pow(2, Math.log2(harmonic) % 1);
+                    playSound(envelopedWave, baseFrequency * factor, SOUND_DURATION);
                 });
 
             harmonicCircleSvg.append("text")
