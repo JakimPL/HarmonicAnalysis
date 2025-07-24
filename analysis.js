@@ -1,9 +1,11 @@
 const MAX_HARMONICS = 32;
 const BASE_FREQUENCY = 220;
 const EDO_LIMIT = 10000;
-const WIDTH = 450;
-const HEIGHT = 250;
-const MARGIN = {top: 20, right: 20, bottom: 30, left: 40};
+
+const dimensions = getDimensions();
+const WIDTH = dimensions.width;
+const HEIGHT = dimensions.height;
+const MARGIN = dimensions.margins;
 
 let harmonicSeries = Array(MAX_HARMONICS).fill(0)
     .map((_, i) => ({harmonic: i + 1, amplitude: 1 / (i + 1) ** (1.5)}));
@@ -31,6 +33,20 @@ const harmonicCircleSvg = d3.select("#harmonic-circle")
 const minEdoInput = document.getElementById("min-edo-input");
 const maxEdoInput = document.getElementById("max-edo-input");
 const edoInput = document.getElementById("edo-input");
+
+function getDimensions(selector) {
+    const root = getComputedStyle(document.documentElement);
+    const width = parseInt(root.getPropertyValue('--width'));
+    const height = parseInt(root.getPropertyValue('--height'));
+    const margins = {
+        top: parseInt(root.getPropertyValue('--margin-top')),
+        right: parseInt(root.getPropertyValue('--margin-right')),
+        bottom: parseInt(root.getPropertyValue('--margin-bottom')),
+        left: parseInt(root.getPropertyValue('--margin-left'))
+    };
+
+    return { width, height, margins };
+}
 
 function updateHarmonicSeries() {
     const x = d3.scaleBand()
