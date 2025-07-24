@@ -50,6 +50,7 @@ body {
 }
 
 .graph {
+    user-select: none;
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -77,8 +78,14 @@ h2 {
 }
 
 .edo-input-container {
-    flex: 0 0 auto; /* Prevents stretching */
-    margin-top: 0; /* Removes unnecessary top margin */
+    flex: 0 0 auto;
+    margin-top: 0;
+}
+
+.edo-label {
+    user-select: none;
+    pointer-events: none;
+    cursor: default;
 }
 
 .axis text, .axis-label {

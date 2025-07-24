@@ -417,6 +417,21 @@ function updateEdoError() {
         .style("font-size", "12px")
         .text("error");
 
+    function showTooltip(event, d) {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", .9);
+        tooltip.html(`EDO: ${d.edo}<br/>Error: ${d.error.toFixed(4)}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+    }
+
+    function hideTooltip() {
+        tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
+    }
+
     svg.selectAll("circle")
         .data(data)
         .join("circle")
@@ -425,33 +440,24 @@ function updateEdoError() {
         .attr("r", 3.5)
         .attr("fill", "#1f77b4")
         .attr("class", "edo-error-plot")
+        .on("click", function(event, d) {
+            const edoInput = document.getElementById("edo-input");
+            edoInput.value = d.edo;
+            updateHarmonicCircle(d.edo);
+        })
         .on("mouseover", function(event, d) {
             d3.select(this)
                 .transition()
                 .duration(200)
                 .attr("fill", "#ff7f0e");
-
-            tooltip.transition()
-                .duration(200)
-                .style("opacity", .9);
-            tooltip.html(`EDO: ${d.edo}<br/>Error: ${d.error.toFixed(4)}`)
-                .style("left", (event.pageX + 10) + "px")
-                .style("top", (event.pageY - 28) + "px");
+            showTooltip(event, d);
         })
         .on("mouseout", function() {
             d3.select(this)
                 .transition()
                 .duration(200)
                 .attr("fill", "#1f77b4");
-
-            tooltip.transition()
-                .duration(500)
-                .style("opacity", 0);
-        })
-        .on("click", function(event, d) {
-            const edoInput = document.getElementById("edo-input");
-            edoInput.value = d.edo;
-            updateHarmonicCircle(d.edo);
+            hideTooltip();
         });
 
     svg.selectAll(".edo-label")
@@ -462,7 +468,9 @@ function updateEdoError() {
         .attr("y", d => yScale(d.error) - 6)
         .attr("text-anchor", "middle")
         .attr("font-size", "10px")
-        .text(d => d.edo);
+        .text(d => d.edo)
+        .on("mouseover", showTooltip)
+        .on("mouseout", hideTooltip);
 }
 
 function updateHarmonicCircle(edo) {
@@ -498,7 +506,6 @@ function updateHarmonicCircle(edo) {
         .style("border", "1px solid #ddd")
         .style("padding", "5px")
         .style("pointer-events", "none");
-
 
     for (let i = 0; i < edo; i++) {
         const angle = (2 * Math.PI * i) / edo - Math.PI / 2;
@@ -537,6 +544,26 @@ function updateHarmonicCircle(edo) {
             });
     }
 
+    function showTooltip(event, data) {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", .9);
+
+        const log_harmonic = Math.log2(data.harmonic) % 1;
+        const ratio = Math.pow(2, log_harmonic);
+        const note = 1.0 + log_harmonic * edo;
+
+        tooltip.html(`Harmonic: ${data.harmonic}<br/>Amplitude: ${data.amplitude.toFixed(3)}<br/>Error: ${data.error.toFixed(3)}<br/>Note: ${note.toFixed(3)}<br/>Ratio: ${ratio.toFixed(3)}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+    }
+
+    function hideTooltip() {
+        tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
+    }
+
     harmonicSeries.forEach(({harmonic, amplitude}) => {
         if (amplitude > 0 && harmonic % 2) {
             const angle = (2 * Math.PI * Math.log2(harmonic)) % (2 * Math.PI) - Math.PI / 2;
@@ -544,8 +571,9 @@ function updateHarmonicCircle(edo) {
             const color = colorScale(error);
             const barStart = radius;
             const barEnd = radius * (1.02 + (amplitude / maxAmplitude) * 0.5);
+            const data = { harmonic, amplitude, error };
 
-            harmonicCircleSvg.append("line")
+            const line = harmonicCircleSvg.append("line")
                 .attr("x1", center + barStart * Math.cos(angle))
                 .attr("y1", center + barStart * Math.sin(angle))
                 .attr("x2", center + barEnd * Math.cos(angle))
@@ -553,25 +581,12 @@ function updateHarmonicCircle(edo) {
                 .attr("stroke", color)
                 .attr("stroke-width", 4)
                 .on("mouseover", function(event) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-
-                    const log_harmonic = Math.log2(harmonic) % 1
-                    const ratio = Math.pow(2, log_harmonic);
-                    const note = 1.0 + log_harmonic * edo;
-                    tooltip.html(`Harmonic: ${harmonic}<br/>Amplitude: ${amplitude.toFixed(3)}<br/>Error: ${error.toFixed(3)}<br/>Note: ${note.toFixed(3)}<br/>Ratio: ${ratio.toFixed(3)}`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                    d3.select(this)
-                        .attr("stroke-width", 6);
+                    d3.select(this).attr("stroke-width", 6);
+                    showTooltip(event, data);
                 })
                 .on("mouseout", function() {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                    d3.select(this)
-                        .attr("stroke-width", 4);
+                    d3.select(this).attr("stroke-width", 4);
+                    hideTooltip();
                 });
 
             harmonicCircleSvg.append("text")
@@ -580,7 +595,15 @@ function updateHarmonicCircle(edo) {
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
                 .attr("font-size", "10px")
-                .text(harmonic);
+                .text(harmonic)
+                .on("mouseover", function(event) {
+                    line.attr("stroke-width", 6);
+                    showTooltip(event, data);
+                })
+                .on("mouseout", function() {
+                    line.attr("stroke-width", 4);
+                    hideTooltip();
+                });
         }
     });
 }
