@@ -1,7 +1,7 @@
 const MAX_HARMONICS = 32;
 const BASE_FREQUENCY = 220;
 const EDO_LIMIT = 10000;
-const SOUND_DURATION = 2.0;
+const SOUND_DURATION = 1.0;
 
 const dimensions = getDimensions();
 const WIDTH = dimensions.width;
@@ -335,14 +335,10 @@ function updateDissonanceGraph() {
 
             if (ratio >= 1 && ratio <= 2) {
                 const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
-                const wave1 = createWaveform(harmonicSeries);
-                const wave2 = createWaveform(harmonicSeries);
-                const envelopedWave1 = applyEnvelope(wave1);
-                const envelopedWave2 = applyEnvelope(wave2);
-                const combinedWave = combineWaves(envelopedWave1, envelopedWave2);
-
-                playSound(combinedWave, baseFrequency, 2.0);
-                playSound(combinedWave, baseFrequency * ratio, 2.0);
+                const waveform = createWaveform(harmonicSeries);
+                const envelopedWave = applyEnvelope(waveform);
+                const combinedWave = combineWaves(envelopedWave, ratio);
+                playSound(combinedWave, baseFrequency, SOUND_DURATION);
             }
         });
 }
@@ -558,7 +554,7 @@ function updateHarmonicCircle(edo) {
             .on("click", function() {
                 const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
                 const wave = createWaveform(harmonicSeries);
-                const envelopedWave = applyEnvelope(wave);
+                const envelopedWave = applyEnvelope(wave, SOUND_DURATION, 0.5);
                 playSound(envelopedWave, baseFrequency * ratio, SOUND_DURATION);
             });
     }
@@ -610,8 +606,8 @@ function updateHarmonicCircle(edo) {
                 .on("click", function() {
                     const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
                     const wave = createWaveform(harmonicSeries);
-                    const envelopedWave = applyEnvelope(wave);
                     const factor = Math.pow(2, Math.log2(harmonic) % 1);
+                    const envelopedWave = applyEnvelope(wave, SOUND_DURATION, 0.5);
                     playSound(envelopedWave, baseFrequency * factor, SOUND_DURATION);
                 });
 

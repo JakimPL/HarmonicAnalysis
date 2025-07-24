@@ -21,20 +21,20 @@ function createWaveform(harmonicSeries) {
     };
 }
 
-function applyEnvelope(waveform, duration = 1.0) {
+function applyEnvelope(waveform, duration = 1.0, baseAmplitude = 1.0) {
     return (time, frequency) => {
-        const amplitude = Math.max(0, 1.0 - time / duration);
+        const amplitude = baseAmplitude * Math.max(0, 1.0 - time / duration);
         return amplitude * waveform(time, frequency);
     };
 }
 
-function combineWaves(wave1, wave2) {
+function combineWaves(wave, ratio, weight = 0.5) {
     return (time, frequency) => {
-        return 0.5 * (wave1(time, frequency) + wave2(time, frequency));
+        return (1 - weight) * wave(time, frequency) + weight * wave(time, frequency * ratio);
     };
 }
 
-function playSound(waveform, frequency, duration = 2.0) {
+function playSound(waveform, frequency, duration = 1.0) {
     const context = getAudioContext();
     const bufferSize = Math.ceil(SAMPLE_RATE * duration);
     const buffer = context.createBuffer(1, bufferSize, SAMPLE_RATE);
