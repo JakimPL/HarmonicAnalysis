@@ -84,8 +84,6 @@ h2 {
 
 .edo-label {
     user-select: none;
-    pointer-events: none;
-    cursor: default;
 }
 
 .axis text, .axis-label {

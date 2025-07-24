@@ -51,7 +51,7 @@ function updateHarmonicSeries() {
         const harmonicNumber = Math.floor(x.domain().length *
             (mouseX - MARGIN.left) / (WIDTH - MARGIN.left - MARGIN.right)) + 1;
 
-        if (harmonicNumber > 1 && harmonicNumber <= MAX_HARMONICS) {
+        if (harmonicNumber >= 1 && harmonicNumber <= MAX_HARMONICS) {
             const newAmplitude = Math.max(0, Math.min(1, y.invert(mouseY)));
             const harmonicData = harmonicSeries.find(h => h.harmonic === harmonicNumber);
             if (harmonicData) {
