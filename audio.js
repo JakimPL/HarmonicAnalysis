@@ -1,5 +1,16 @@
 const SAMPLE_RATE = 44100;
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+let audioContext = null;
+
+function getAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+    }
+    return audioContext;
+}
 
 function createWaveform(harmonicSeries) {
     const normalizer = 1.0 / harmonicSeries.reduce((sum, { amplitude }) => sum + amplitude, 0);
@@ -24,8 +35,9 @@ function combineWaves(wave1, wave2) {
 }
 
 function playSound(waveform, frequency, duration = 2.0) {
+    const context = getAudioContext();
     const bufferSize = Math.ceil(SAMPLE_RATE * duration);
-    const buffer = audioContext.createBuffer(1, bufferSize, SAMPLE_RATE);
+    const buffer = context.createBuffer(1, bufferSize, SAMPLE_RATE);
     const data = buffer.getChannelData(0);
 
     for (let i = 0; i < bufferSize; i++) {
@@ -33,9 +45,9 @@ function playSound(waveform, frequency, duration = 2.0) {
         data[i] = waveform(time, frequency);
     }
 
-    const source = audioContext.createBufferSource();
+    const source = context.createBufferSource();
     source.buffer = buffer;
-    source.connect(audioContext.destination);
+    source.connect(context.destination);
     source.start();
 
     return source;

@@ -353,7 +353,6 @@ function updateEdoError() {
 
     if (isNaN(maxEdo) || maxEdo < minEdo + 1) {
         maxEdo = minEdo + 1;
-        maxEdoInput.value = maxEdo;
     } else if (maxEdo > EDO_LIMIT) {
         maxEdo = EDO_LIMIT;
     }
