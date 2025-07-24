@@ -357,9 +357,6 @@ function updateEdoError() {
         maxEdo = EDO_LIMIT;
     }
 
-    minEdoInput.value = minEdo;
-    maxEdoInput.value = maxEdo;
-
     for (let edo = minEdo; edo <= maxEdo; edo++) {
         data.push({ edo: edo, error: scaleError(edo, series) });
     }
@@ -611,8 +608,10 @@ function updateEdoInputs() {
     const minEdo = parseInt(minEdoInput.value);
     const maxEdo = parseInt(maxEdoInput.value);
 
-    if (maxEdo <= minEdo) {
-        maxEdoInput.value = minEdo + 1;
+    if (!maxEdoInput.matches(':focus')) {
+        if (maxEdo <= minEdo) {
+            maxEdoInput.value = minEdo + 1;
+        }
     }
 
     edoInput.max = maxEdoInput.value;
