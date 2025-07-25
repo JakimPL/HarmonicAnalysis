@@ -2,6 +2,7 @@ const MAX_HARMONICS = 32;
 const BASE_FREQUENCY = 220;
 const EDO_LIMIT = 10000;
 const SOUND_DURATION = 1.0;
+const SNAPPING_THRESHOLD = 0.01;
 
 const dimensions = getDimensions();
 const WIDTH = dimensions.width;
@@ -319,22 +320,51 @@ function updateDissonanceGraph() {
         .style("fill", "none")
         .style("pointer-events", "all");
 
+    function getSnappedRatio(ratio, edo) {
+        const logRatio = Math.log2(ratio);
+        const closestEdoNote = Math.round(logRatio * edo) / edo;
+        const edoSnappedRatio = Math.pow(2, closestEdoNote);
+
+        const predefinedIntervals = [1, 9 / 8, 5 / 4, 4 / 3, 3 / 2, 5 / 3, 15 / 8, 2];
+        let closestInterval = ratio;
+        let minIntervalDiff = Infinity;
+
+        predefinedIntervals.forEach(interval => {
+            const diff = Math.abs(ratio - interval);
+            if (diff < minIntervalDiff) {
+                minIntervalDiff = diff;
+                closestInterval = interval;
+            }
+        });
+
+        const edoDiff = Math.abs(ratio - edoSnappedRatio);
+        if (edoDiff < SNAPPING_THRESHOLD || minIntervalDiff < SNAPPING_THRESHOLD) {
+            return edoDiff < minIntervalDiff ? edoSnappedRatio : closestInterval;
+        }
+
+        return ratio;
+    }
+
     overlay
         .on("mousemove", function(event) {
             const mouseX = d3.pointer(event)[0];
-            const ratio = x.invert(mouseX);
+            let ratio = x.invert(mouseX);
 
             if (ratio >= 1 && ratio <= 2) {
+                const edo = parseInt(document.getElementById("edo-input").value) || 12;
+                ratio = getSnappedRatio(ratio, edo);
+
                 const value = graph.function(ratio) * graph.normalizer;
+                const xPos = x(ratio);
                 const yPos = y(value);
 
                 hoverPoint
-                    .attr("cx", mouseX)
+                    .attr("cx", xPos)
                     .attr("cy", yPos)
                     .style("opacity", 1);
 
                 hoverLabel
-                    .attr("x", mouseX)
+                    .attr("x", xPos)
                     .attr("y", yPos - 10)
                     .text(`${ratio.toFixed(4)} : ${value.toFixed(4)}`)
                     .style("opacity", 1);
@@ -346,9 +376,12 @@ function updateDissonanceGraph() {
         })
         .on("click", function(event) {
             const mouseX = d3.pointer(event)[0];
-            const ratio = x.invert(mouseX);
+            let ratio = x.invert(mouseX);
 
             if (ratio >= 1 && ratio <= 2) {
+                const edo = parseInt(document.getElementById("edo-input").value) || 12;
+                ratio = getSnappedRatio(ratio, edo);
+
                 const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
                 const waveform = createWaveform(harmonicSeries);
                 const envelopedWave = applyEnvelope(waveform);
