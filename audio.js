@@ -13,9 +13,9 @@ function getAudioContext() {
 }
 
 function createWaveform(harmonicSeries) {
-    const normalizer = 1.0 / harmonicSeries.reduce((sum, { amplitude }) => sum + amplitude, 0);
+    const normalizer = 1.0 / Object.values(harmonicSeries).reduce((sum, amplitude) => sum + amplitude, 0);
     return (time, frequency) => {
-        return harmonicSeries.reduce((sum, { harmonic, amplitude }) => {
+        return Object.entries(harmonicSeries).reduce((sum, [harmonic, amplitude]) => {
             return sum + normalizer * amplitude * Math.sin(2 * Math.PI * frequency * harmonic * time);
         }, 0);
     };

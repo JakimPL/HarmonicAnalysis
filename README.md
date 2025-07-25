@@ -21,3 +21,23 @@ This interactive tool helps explore musical harmony through four connected visua
 
   - **Harmonic Circle:**  
   Shows harmonics arranged in a circle, with colors indicating how well they match the selected EDO system (green = good match, red = poor match). Blue lines show the EDO divisions.
+
+## Advanced editing
+
+If you want to provide non-standard (fractional) harmonics, or harmonics beyond the given range, you may use the console and edit the `harmonicSeries` variable directly. Examples:
+
+```javascript
+harmonicSeries[1.5] = 0.5;
+```
+
+You can also provide the entire harmonic series as a dictionary:
+
+```javascript
+harmonicSeries = {1: 1.0, 1.75: 0.25, 2.44: 0.1, 3: 0.05, 4.47: 0.02};
+```
+
+Update all graphs by calling:
+
+```javascript
+updateAll();
+```

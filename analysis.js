@@ -9,8 +9,10 @@ const WIDTH = dimensions.width;
 const HEIGHT = dimensions.height;
 const MARGIN = dimensions.margins;
 
-let harmonicSeries = Array(MAX_HARMONICS).fill(0)
-    .map((_, i) => ({harmonic: i + 1, amplitude: 1 / (i + 1) ** (1.5)}));
+let harmonicSeries = {};
+for (let i = 1; i <= MAX_HARMONICS; i++) {
+    harmonicSeries[i] = 1 / Math.pow(i, 1.5);
+}
 
 const harmonicsSvg = d3.select("#harmonics")
     .append("svg")
@@ -50,10 +52,20 @@ function getDimensions(selector) {
     return { width, height, margins };
 }
 
+function sortHarmonicSeries() {
+    harmonicSeries = Object.fromEntries(
+        Object.entries(harmonicSeries)
+            .map(([key, value]) => [parseFloat(key), value])
+            .sort(([a], [b]) => a - b)
+    );
+}
+
 function updateHarmonicSeries() {
+    sortHarmonicSeries();
+
     const x = d3.scaleBand()
         .range([MARGIN.left, WIDTH - MARGIN.right])
-        .domain(harmonicSeries.map(d => d.harmonic))
+        .domain(Object.keys(harmonicSeries))
         .padding(0.1);
 
     const y = d3.scaleLinear()
@@ -69,15 +81,14 @@ function updateHarmonicSeries() {
         const harmonicNumber = Math.floor(x.domain().length *
             (mouseX - MARGIN.left) / (WIDTH - MARGIN.left - MARGIN.right)) + 1;
 
-        if (harmonicNumber >= 1 && harmonicNumber <= MAX_HARMONICS) {
+        if (harmonicNumber > 0 && harmonicNumber <= MAX_HARMONICS) {
             const newAmplitude = Math.max(0, Math.min(1, y.invert(mouseY)));
-            const harmonicData = harmonicSeries.find(h => h.harmonic === harmonicNumber);
-            if (harmonicData) {
-                harmonicData.amplitude = newAmplitude;
+            if (harmonicSeries[harmonicNumber] !== undefined) {
+                harmonicSeries[harmonicNumber] = newAmplitude;
                 harmonicsSvg.selectAll("rect")
-                    .data(harmonicSeries)
-                    .attr("y", d => y(d.amplitude))
-                    .attr("height", d => HEIGHT - MARGIN.bottom - y(d.amplitude));
+                    .data(Object.entries(harmonicSeries))
+                    .attr("y", ([_, amplitude]) => y(amplitude))
+                    .attr("height", ([_, amplitude]) => HEIGHT - MARGIN.bottom - y(amplitude));
             }
         }
     }
@@ -88,29 +99,29 @@ function updateHarmonicSeries() {
     }
 
     harmonicsSvg.selectAll("rect")
-        .data(harmonicSeries)
+        .data(Object.entries(harmonicSeries))
         .join("rect")
         .attr("class", "bar")
-        .attr("x", d => x(d.harmonic))
-        .attr("y", d => y(d.amplitude))
+        .attr("x", ([harmonic, _]) => x(harmonic))
+        .attr("y", ([_, amplitude]) => y(amplitude))
         .attr("width", x.bandwidth())
-        .attr("height", d => HEIGHT - MARGIN.bottom - y(d.amplitude))
+        .attr("height", ([_, amplitude]) => HEIGHT - MARGIN.bottom - y(amplitude))
         .attr("fill", "#1f77b4")
-        .on("mouseover", function(event, d) {
+        .on("mouseover", function(event, [harmonic, amplitude]) {
             if (!isDragging) {
-                hoveredBar = d.harmonic;
+                hoveredBar = harmonic;
                 d3.select(this).attr("fill", "#ff7f0e");
 
                 const label = harmonicsSvg.append("text")
                     .attr("class", "amplitude-label")
-                    .attr("x", x(d.harmonic) + x.bandwidth() / 2)
-                    .attr("y", y(d.amplitude) - 5)
+                    .attr("x", x(harmonic) + x.bandwidth() / 2)
+                    .attr("y", y(amplitude) - 5)
                     .attr("text-anchor", "middle")
                     .attr("font-size", "10px")
-                    .text(`H${d.harmonic}: ${d.amplitude.toFixed(4)}`);
+                    .text(`H${harmonic}: ${amplitude.toFixed(4)}`);
             }
         })
-        .on("mouseout", function(event, d) {
+        .on("mouseout", function() {
             if (!isDragging) {
                 hoveredBar = null;
                 d3.select(this).attr("fill", "#1f77b4");
@@ -188,12 +199,7 @@ function updateDissonanceGraph() {
     const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
     const edo = parseInt(document.getElementById("edo-input").value) || 12;
 
-    const series = {};
-    harmonicSeries.forEach(h => {
-        if (h.amplitude > 0) {
-            series[h.harmonic] = h.amplitude;
-        }
-    });
+    const series = { ...harmonicSeries };
 
     const graph = getDissonanceGraph(series, baseFrequency);
 
@@ -425,13 +431,7 @@ function updateEdoError() {
     const margin = { top: 20, right: 20, bottom: 30, left: 40 };
     const width = WIDTH - margin.left - margin.right;
     const height = HEIGHT - margin.top - margin.bottom;
-
-    const series = {};
-    harmonicSeries.forEach(h => {
-        if (h.amplitude > 0) {
-            series[h.harmonic] = h.amplitude;
-        }
-    });
+    const series = { ...harmonicSeries };
 
     const data = [];
     let minEdo = parseInt(minEdoInput.value);
@@ -577,7 +577,7 @@ function updateHarmonicCircle(edo) {
 
     const radius = (HEIGHT / 2 - MARGIN.top) * 0.75;
     const center = HEIGHT / 2;
-    const maxAmplitude = d3.max(harmonicSeries, d => d.amplitude);
+    const maxAmplitude = d3.max(Object.values(harmonicSeries));
 
     harmonicCircleSvg.selectAll("*").remove();
 
@@ -666,7 +666,7 @@ function updateHarmonicCircle(edo) {
             .style("opacity", 0);
     }
 
-    harmonicSeries.forEach(({harmonic, amplitude}) => {
+    Object.entries(harmonicSeries).forEach(([harmonic, amplitude]) => {
         if (amplitude > 0 && harmonic % 2) {
             const angle = (2 * Math.PI * Math.log2(harmonic)) % (2 * Math.PI) - Math.PI / 2;
             const error = toneError(harmonic, edo);
