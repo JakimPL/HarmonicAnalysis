@@ -95,7 +95,13 @@ body {
 }
 
 .graph:not(.fullscreen) .enlarge-icon {
-    z-index: 0; /* Push non-fullscreen icons below the fullscreen graph */
+    z-index: 0;
+}
+
+.tooltip {
+    z-index: 2000;
+    position: absolute;
+    pointer-events: none;
 }
 
 h2 {

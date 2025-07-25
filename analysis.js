@@ -521,14 +521,15 @@ function updateEdoError() {
         .attr("class", "axis")
         .call(d3.axisLeft(yScale));
 
-    const tooltip = d3.select("#edo-error")
+    const tooltip = d3.select("body")
         .append("div")
         .attr("class", "tooltip")
         .style("opacity", 0)
         .style("position", "absolute")
         .style("background-color", "white")
         .style("border", "1px solid #ddd")
-        .style("padding", "5px");
+        .style("padding", "5px")
+        .style("pointer-events", "none");
 
     svg.append("text")
         .attr("class", "axis-label")
