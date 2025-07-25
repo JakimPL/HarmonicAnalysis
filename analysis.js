@@ -809,16 +809,21 @@ document.querySelectorAll('.enlarge-icon').forEach(icon => {
     icon.addEventListener('click', (event) => {
         const graph = event.target.closest('.graph');
         const root = document.documentElement;
+        const iconElement = icon.querySelector('i');
 
         if (graph.classList.contains('fullscreen')) {
             graph.classList.remove('fullscreen');
             root.style.setProperty('--width', '450px');
             root.style.setProperty('--height', '250px');
+            iconElement.classList.remove('fa-search-minus');
+            iconElement.classList.add('fa-search-plus');
         } else {
             document.querySelectorAll('.graph').forEach(g => g.classList.remove('fullscreen'));
             graph.classList.add('fullscreen');
             root.style.setProperty('--width', '900px');
             root.style.setProperty('--height', '500px');
+            iconElement.classList.remove('fa-search-plus');
+            iconElement.classList.add('fa-search-minus');
         }
 
         setDimensions();
