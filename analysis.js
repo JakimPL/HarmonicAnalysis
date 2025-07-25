@@ -185,6 +185,7 @@ function updateHarmonicSeries() {
 
 function updateDissonanceGraph() {
     const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
+    const edo = parseInt(document.getElementById("edo-input").value) || 12;
 
     const series = {};
     harmonicSeries.forEach(h => {
@@ -210,6 +211,20 @@ function updateDissonanceGraph() {
     const points = graph.ratios.map((ratio, i) => [ratio, graph.values[i]]);
 
     dissonanceSvg.selectAll("*").remove();
+
+    for (let i = 0; i <= edo; i++) {
+        const ratio = Math.pow(2, i / edo);
+        const xPos = x(ratio);
+
+        dissonanceSvg.append("line")
+            .attr("x1", xPos)
+            .attr("y1", MARGIN.top)
+            .attr("x2", xPos)
+            .attr("y2", HEIGHT - MARGIN.bottom)
+            .attr("stroke", "gray")
+            .attr("stroke-dasharray", "4,2")
+            .attr("stroke-width", 1);
+    }
 
     dissonanceSvg.append("path")
         .datum(points)
@@ -453,6 +468,7 @@ function updateEdoError() {
             const edoInput = document.getElementById("edo-input");
             edoInput.value = d.edo;
             updateHarmonicCircle(d.edo);
+            updateDissonanceGraph();
         })
         .on("mouseover", function(event, d) {
             d3.select(this)
@@ -632,7 +648,7 @@ function updateHarmonicCircle(edo) {
                 })
                 .on("click", function() {
                     playHarmonic(harmonic);
-                });
+                })
         }
     });
 }
@@ -662,7 +678,9 @@ function updateAll() {
 }
 
 document.getElementById("edo-input").addEventListener("change", (e) => {
-    updateHarmonicCircle(parseInt(e.target.value));
+    const edo = parseInt(e.target.value);
+    updateHarmonicCircle(edo);
+    updateDissonanceGraph();
 });
 
 document.getElementById("base-frequency").addEventListener("change", (e) => {
