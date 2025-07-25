@@ -250,6 +250,7 @@ function updateHarmonicSeries() {
         if (isDragging) {
             isDragging = false;
             updateDissonanceGraph();
+            updateEdoError();
             updateHarmonicCircle();
         }
     });
