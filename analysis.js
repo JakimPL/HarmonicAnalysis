@@ -38,6 +38,24 @@ const minEdoInput = document.getElementById("min-edo-input");
 const maxEdoInput = document.getElementById("max-edo-input");
 const edoInput = document.getElementById("edo-input");
 
+function updateHarmonicSeriesFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const newHarmonicSeries = {};
+
+    urlParams.forEach((value, key) => {
+        const harmonic = parseFloat(key);
+        const amplitude = parseFloat(value);
+
+        if (!isNaN(harmonic) && !isNaN(amplitude) && harmonic > 0 && amplitude >= 0 && amplitude <= 1) {
+            newHarmonicSeries[harmonic] = amplitude;
+        }
+    });
+
+ if (Object.keys(newHarmonicSeries).length > 0) {
+        harmonicSeries = newHarmonicSeries;
+    }
+}
+
 function getDimensions(selector) {
     const root = getComputedStyle(document.documentElement);
     const width = parseInt(root.getPropertyValue('--width'));
@@ -767,4 +785,5 @@ maxEdoInput.addEventListener("input", () => {
     updateHarmonicCircle(parseInt(document.getElementById("edo-input").value));
 });
 
+updateHarmonicSeriesFromURL();
 updateAll();

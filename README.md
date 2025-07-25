@@ -41,3 +41,11 @@ Update all graphs by calling:
 ```javascript
 updateAll();
 ```
+
+Finally, you can provide a custom series via a URL in the following format:
+
+```
+https://edo.jakim.it/?1.0=1.0&1.75=0.25&2.44=0.1&3=0.05&4.47=0.02
+```
+
+where each harmonic is set by `harmonic=value` pairs, joined by `&`. 
