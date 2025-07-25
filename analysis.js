@@ -297,6 +297,14 @@ function updateDissonanceGraph() {
                 .text(d.name);
         });
 
+    const hoverBox = dissonanceSvg.append("rect")
+        .attr("class", "hover-box")
+        .attr("fill", "rgba(255, 255, 255, 0.8)")
+        .attr("stroke", "#ccc")
+        .attr("rx", 4)
+        .attr("ry", 4)
+        .style("opacity", 0);
+
     const hoverPoint = dissonanceSvg.append("circle")
         .attr("class", "hover-point")
         .attr("r", 4)
@@ -310,6 +318,7 @@ function updateDissonanceGraph() {
         .attr("font-size", "10px")
         .style("opacity", 0)
         .style("pointer-events", "none");
+
 
     const overlay = dissonanceSvg.append("rect")
         .attr("class", "overlay")
@@ -339,24 +348,35 @@ function updateDissonanceGraph() {
 
         const edoDiff = Math.abs(ratio - edoSnappedRatio);
         if (edoDiff < SNAPPING_THRESHOLD || minIntervalDiff < SNAPPING_THRESHOLD) {
-            return edoDiff < minIntervalDiff ? edoSnappedRatio : closestInterval;
+            if (minIntervalDiff < edoDiff) {
+                return [closestInterval, false];
+            } else {
+                return [edoSnappedRatio, true];
+            }
         }
 
-        return ratio;
+        return [ratio, false];
     }
 
     overlay
         .on("mousemove", function(event) {
             const mouseX = d3.pointer(event)[0];
             let ratio = x.invert(mouseX);
+            let snapped = false;
 
             if (ratio >= 1 && ratio <= 2) {
                 const edo = parseInt(document.getElementById("edo-input").value) || 12;
-                ratio = getSnappedRatio(ratio, edo);
+                [ratio, snapped] = getSnappedRatio(ratio, edo);
+
+                const logRatio = Math.log2(ratio);
+                const note = Math.round(logRatio * edo);
 
                 const value = graph.function(ratio) * graph.normalizer;
                 const xPos = x(ratio);
                 const yPos = y(value);
+
+                const ratioText = `${ratio.toFixed(4)} : ${value.toFixed(4)}`;
+                const lines = snapped ? [`Note: ${note}`, ratioText] : [ratioText];
 
                 hoverPoint
                     .attr("cx", xPos)
@@ -365,14 +385,24 @@ function updateDissonanceGraph() {
 
                 hoverLabel
                     .attr("x", xPos)
-                    .attr("y", yPos - 10)
-                    .text(`${ratio.toFixed(4)} : ${value.toFixed(4)}`)
+                    .attr("y", yPos - 10 - (lines.length - 1) * 15) // Adjust upward for multiple lines
+                    .html(() => lines.map((line, i) => `<tspan x="${xPos}" dy="${i === 0 ? 0 : 15}">${line}</tspan>`).join(""))
+                    .style("opacity", 1)
+                    .style("fill", "black");
+
+                const textBBox = hoverLabel.node().getBBox();
+                hoverBox
+                    .attr("x", textBBox.x - 5)
+                    .attr("y", textBBox.y - 2)
+                    .attr("width", textBBox.width + 10)
+                    .attr("height", textBBox.height + 4)
                     .style("opacity", 1);
             }
         })
         .on("mouseout", function() {
             hoverPoint.style("opacity", 0);
             hoverLabel.style("opacity", 0);
+            hoverBox.style("opacity", 0);
         })
         .on("click", function(event) {
             const mouseX = d3.pointer(event)[0];
@@ -380,7 +410,7 @@ function updateDissonanceGraph() {
 
             if (ratio >= 1 && ratio <= 2) {
                 const edo = parseInt(document.getElementById("edo-input").value) || 12;
-                ratio = getSnappedRatio(ratio, edo);
+                ratio = getSnappedRatio(ratio, edo)[0];
 
                 const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
                 const waveform = createWaveform(harmonicSeries);
@@ -593,7 +623,7 @@ function updateHarmonicCircle(edo) {
                 tooltip.transition()
                     .duration(200)
                     .style("opacity", .9);
-                tooltip.html(`Note: ${i + 1}<br/>Ratio: ${ratio.toFixed(4)}`)
+                tooltip.html(`Note: ${i}<br/>Ratio: ${ratio.toFixed(4)}`)
                     .style("left", (event.pageX + 10) + "px")
                     .style("top", (event.pageY - 28) + "px");
                 d3.select(this)
@@ -623,7 +653,7 @@ function updateHarmonicCircle(edo) {
 
         const log_harmonic = Math.log2(data.harmonic) % 1;
         const ratio = Math.pow(2, log_harmonic);
-        const note = 1.0 + log_harmonic * edo;
+        const note = log_harmonic * edo;
 
         tooltip.html(`Harmonic: ${data.harmonic}<br/>Amplitude: ${data.amplitude.toFixed(4)}<br/>Error: ${data.error.toFixed(4)}<br/>Note: ${note.toFixed(4)}<br/>Ratio: ${ratio.toFixed(4)}`)
             .style("left", (event.pageX + 10) + "px")
