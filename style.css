@@ -50,6 +50,7 @@ body {
 }
 
 .graph {
+    position: relative;
     user-select: none;
     background-color: #fff;
     border: 1px solid #ddd;
@@ -62,6 +63,39 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    z-index: 1;
+}
+
+.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    overflow: auto;
+}
+
+.enlarge-icon {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1001;
+    color: #333;
+    background: none;
+    width: auto;
+    height: auto;
+    line-height: 1;
+    text-align: center;
+    z-index: 2;
+}
+
+.graph:not(.fullscreen) .enlarge-icon {
+    z-index: 0; /* Push non-fullscreen icons below the fullscreen graph */
 }
 
 h2 {

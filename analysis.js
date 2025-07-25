@@ -791,6 +791,20 @@ document.getElementById("base-frequency").addEventListener("change", (e) => {
     updateDissonanceGraph();
 });
 
+document.querySelectorAll('.enlarge-icon').forEach(icon => {
+    icon.addEventListener('click', (event) => {
+        const graph = event.target.closest('.graph');
+        if (graph.classList.contains('fullscreen')) {
+            graph.classList.remove('fullscreen');
+        } else {
+            document.querySelectorAll('.graph').forEach(g => g.classList.remove('fullscreen'));
+            graph.classList.add('fullscreen');
+        }
+        getDimensions();
+        updateAll();
+    });
+});
+
 minEdoInput.addEventListener("input", () => {
     if (parseInt(minEdoInput.value) < 1) {
         minEdoInput.value = 1;
