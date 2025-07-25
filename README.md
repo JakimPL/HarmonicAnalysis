@@ -24,7 +24,7 @@ This interactive tool helps explore musical harmony through four connected visua
 
 ## Advanced editing
 
-If you want to provide non-standard (fractional) harmonics, or harmonics beyond the given range, you may use the console and edit the `harmonicSeries` variable directly. Examples:
+If you want to provide non-standard (fractional) harmonics, or harmonics beyond the given range, you may use the console and edit the `harmonicSeries` variable directly. For example, you can add a single harmonic by:
 
 ```javascript
 harmonicSeries[1.5] = 0.5;

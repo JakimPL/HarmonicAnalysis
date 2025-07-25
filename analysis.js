@@ -63,95 +63,124 @@ function sortHarmonicSeries() {
 function updateHarmonicSeries() {
     sortHarmonicSeries();
 
-    const x = d3.scaleBand()
+    const maxKey = Math.max(...Object.keys(harmonicSeries).map(Number));
+    const barWidth = 10;
+
+    const x = d3.scaleLinear()
         .range([MARGIN.left, WIDTH - MARGIN.right])
-        .domain(Object.keys(harmonicSeries))
-        .padding(0.1);
+        .domain([0, maxKey + 1]);
 
     const y = d3.scaleLinear()
         .range([HEIGHT - MARGIN.bottom, MARGIN.top])
         .domain([0, 1]);
 
     let isDragging = false;
-    let hoveredBar = null;
 
     function updateAmplitude(event) {
         const mouseX = d3.pointer(event)[0];
+        const harmonicNumber = x.invert(mouseX);
         const mouseY = d3.pointer(event)[1];
-        const harmonicNumber = Math.floor(x.domain().length *
-            (mouseX - MARGIN.left) / (WIDTH - MARGIN.left - MARGIN.right)) + 1;
+        const newAmplitude = Math.max(0, Math.min(1, y.invert(mouseY)));
 
-        if (harmonicNumber > 0 && harmonicNumber <= MAX_HARMONICS) {
-            const newAmplitude = Math.max(0, Math.min(1, y.invert(mouseY)));
-            if (harmonicSeries[harmonicNumber] !== undefined) {
-                harmonicSeries[harmonicNumber] = newAmplitude;
+        const closestHarmonic = Object.keys(harmonicSeries)
+            .map(Number)
+            .reduce((a, b) => (Math.abs(b - harmonicNumber) < Math.abs(a - harmonicNumber) ? b : a));
+
+        if (Math.abs(closestHarmonic - harmonicNumber) <= 0.5) {
+            if (harmonicSeries.hasOwnProperty(closestHarmonic)) {
+                harmonicSeries[closestHarmonic] = newAmplitude;
                 harmonicsSvg.selectAll("rect")
                     .data(Object.entries(harmonicSeries))
                     .attr("y", ([_, amplitude]) => y(amplitude))
-                    .attr("height", ([_, amplitude]) => HEIGHT - MARGIN.bottom - y(amplitude));
+                    .attr("height", ([_, amplitude]) => HEIGHT - MARGIN.bottom - y(amplitude))
+                    .attr("fill", ([harmonic, _]) => {
+                        const mouseX = d3.pointer(event)[0];
+                        const barStart = x(harmonic) - barWidth / 2;
+                        const barEnd = x(harmonic) + barWidth / 2;
+                        return mouseX >= barStart && mouseX <= barEnd ? "#ff7f0e" : "#1f77b4";
+                    });
             }
         }
-    }
-
-    function clearHighlights() {
-        harmonicsSvg.selectAll("rect").attr("fill", "#1f77b4");
-        harmonicsSvg.selectAll(".amplitude-label").remove();
     }
 
     harmonicsSvg.selectAll("rect")
         .data(Object.entries(harmonicSeries))
         .join("rect")
         .attr("class", "bar")
-        .attr("x", ([harmonic, _]) => x(harmonic))
+        .attr("x", ([harmonic, _]) => x(harmonic) - barWidth / 2)
         .attr("y", ([_, amplitude]) => y(amplitude))
-        .attr("width", x.bandwidth())
+        .attr("width", barWidth)
         .attr("height", ([_, amplitude]) => HEIGHT - MARGIN.bottom - y(amplitude))
         .attr("fill", "#1f77b4")
-        .on("mouseover", function(event, [harmonic, amplitude]) {
-            if (!isDragging) {
-                hoveredBar = harmonic;
-                d3.select(this).attr("fill", "#ff7f0e");
-
-                const label = harmonicsSvg.append("text")
-                    .attr("class", "amplitude-label")
-                    .attr("x", x(harmonic) + x.bandwidth() / 2)
-                    .attr("y", y(amplitude) - 5)
-                    .attr("text-anchor", "middle")
-                    .attr("font-size", "10px")
-                    .text(`H${harmonic}: ${amplitude.toFixed(4)}`);
-            }
+        .on("mouseover", function (event, [harmonic, amplitude]) {
+            d3.select(this).attr("fill", "#ff7f0e");
+            harmonicsSvg.append("text")
+                .attr("class", "hover-label")
+                .attr("x", x(harmonic))
+                .attr("y", y(amplitude) - 5)
+                .attr("text-anchor", "middle")
+                .attr("font-size", "10px")
+                .text(`H${harmonic}:${amplitude.toFixed(2)}`);
         })
-        .on("mouseout", function() {
-            if (!isDragging) {
-                hoveredBar = null;
-                d3.select(this).attr("fill", "#1f77b4");
-                harmonicsSvg.selectAll(".amplitude-label").remove();
-            }
+        .on("mouseout", function () {
+            d3.select(this).attr("fill", "#1f77b4");
+            harmonicsSvg.selectAll(".hover-label").remove();
         });
 
-    harmonicsSvg
-        .on("mousedown", event => {
-            isDragging = true;
-            clearHighlights();
+    harmonicsSvg.on("mousedown", function (event) {
+        isDragging = true;
+        updateAmplitude(event);
+    });
+
+    harmonicsSvg.on("mousemove", function (event) {
+        const mouseX = d3.pointer(event)[0];
+        const mouseY = d3.pointer(event)[1];
+
+        if (mouseX < MARGIN.left || mouseX > WIDTH - MARGIN.right || mouseY < MARGIN.top || mouseY > HEIGHT - MARGIN.bottom) {
+            harmonicsSvg.selectAll("rect").attr("fill", "#1f77b4");
+            harmonicsSvg.selectAll(".hover-label").remove();
+            return;
+        }
+
+        let isOverBar = false;
+
+        harmonicsSvg.selectAll("rect")
+            .each(function ([harmonic, amplitude]) {
+                const barStart = x(harmonic) - barWidth / 2;
+                const barEnd = x(harmonic) + barWidth / 2;
+
+                if (mouseX >= barStart && mouseX <= barEnd) {
+                    isOverBar = true;
+
+                    d3.select(this).attr("fill", "#ff7f0e");
+                    harmonicsSvg.selectAll(".hover-label").remove();
+                    harmonicsSvg.append("text")
+                        .attr("class", "hover-label")
+                        .attr("x", x(harmonic))
+                        .attr("y", y(amplitude) - 5)
+                        .attr("text-anchor", "middle")
+                        .attr("font-size", "10px")
+                        .text(`H${harmonic}:${amplitude.toFixed(2)}`);
+                } else {
+                    d3.select(this).attr("fill", "#1f77b4");
+                }
+            });
+
+        if (!isOverBar) {
+            harmonicsSvg.selectAll(".hover-label").remove();
+        }
+
+        if (isDragging) {
             updateAmplitude(event);
-            updateEdoError();
-            updateHarmonicCircle(parseInt(document.getElementById("edo-input").value));
-        })
-        .on("mousemove", event => {
-            if (isDragging) {
-                updateAmplitude(event);
-                updateEdoError();
-                updateHarmonicCircle(parseInt(document.getElementById("edo-input").value));
-            }
-        });
+        }
+    });
 
-    d3.select(window)
-        .on("mouseup.harmonics", () => {
-            if (isDragging) {
-                isDragging = false;
-                updateDissonanceGraph();
-            }
-        });
+    harmonicsSvg.on("mouseup", function () {
+        if (isDragging) {
+            isDragging = false;
+            updateDissonanceGraph();
+        }
+    });
 
     harmonicsSvg.selectAll(".axis").remove();
 
@@ -164,35 +193,6 @@ function updateHarmonicSeries() {
         .attr("class", "axis")
         .attr("transform", `translate(${MARGIN.left},0)`)
         .call(d3.axisLeft(y));
-
-    harmonicsSvg.selectAll(".axis, .axis-label").remove();
-
-    harmonicsSvg.append("g")
-        .attr("class", "axis")
-        .attr("transform", `translate(0,${HEIGHT - MARGIN.bottom})`)
-        .call(d3.axisBottom(x));
-
-    harmonicsSvg.append("text")
-        .attr("class", "axis-label")
-        .attr("x", WIDTH / 2)
-        .attr("y", HEIGHT - 1)
-        .attr("text-anchor", "middle")
-        .style("font-size", "12px")
-        .text("harmonic");
-
-    harmonicsSvg.append("g")
-        .attr("class", "axis")
-        .attr("transform", `translate(${MARGIN.left},0)`)
-        .call(d3.axisLeft(y));
-
-    harmonicsSvg.append("text")
-        .attr("class", "axis-label")
-        .attr("transform", "rotate(-90)")
-        .attr("x", -(HEIGHT / 2))
-        .attr("y", 10)
-        .attr("text-anchor", "middle")
-        .style("font-size", "12px")
-        .text("amplitude");
 }
 
 function updateDissonanceGraph() {
@@ -391,7 +391,7 @@ function updateDissonanceGraph() {
 
                 hoverLabel
                     .attr("x", xPos)
-                    .attr("y", yPos - 10 - (lines.length - 1) * 15) // Adjust upward for multiple lines
+                    .attr("y", yPos - 10 - (lines.length - 1) * 15)
                     .html(() => lines.map((line, i) => `<tspan x="${xPos}" dy="${i === 0 ? 0 : 15}">${line}</tspan>`).join(""))
                     .style("opacity", 1)
                     .style("fill", "black");
