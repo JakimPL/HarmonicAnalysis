@@ -11,9 +11,9 @@ This interactive tool helps explore musical harmony through four connected visua
 - **EDO Error Graph:**  
   Displays how well different Equal Division of Octave (EDO) systems match our harmonic series. Common Western music uses 12-EDO. Click any point to see its representation in the circle.
 
-  The error is calculated as the weighted distance of odd harmonics to the closest EDO note:
+  The error is calculated as the weighted distance of harmonics to the closest EDO note:
 
-  ![Equation](https://latex.codecogs.com/png.latex?e%20=%20\sqrt{\sum_{k=1}^{+\infty}a_{2k-1}%20(x_{2k-1}%20-%20[x_{2k-1}])^2})
+  ![Equation](https://latex.codecogs.com/png.latex?e%20=%20\sqrt{\sum_{n=1}^{+\infty}a_{n}%20(x_{n}%20-%20[x_{n}])^2})
 
   where:
   - `a_n` is the _n_-th harmonic amplitude

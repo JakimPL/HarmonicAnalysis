@@ -104,7 +104,6 @@ function scaleError(edo, series) {
     let totalError = 0.0;
 
     for (const [harmonic, amplitude] of Object.entries(series)) {
-        if (harmonic % 2 === 0) continue;
         const error = toneError(harmonic, edo);
         totalError += error * amplitude;
     }
