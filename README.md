@@ -4,13 +4,13 @@
 
 This interactive tool helps explore musical harmony through four connected visualizations:
 
-- **Harmonic Series:**  
+- **Harmonic Series:**
   Drag the blue bars to adjust the strength of each harmonic. These changes affect how the sound will be produced.
 
-- **Dissonance Graph:**  
+- **Dissonance Graph:**
   Shows how pleasant or harsh two notes sound together at different intervals. Click anywhere on the line to hear the sound. You can change the base note frequency below the graph.
 
-- **EDO Error Graph:**  
+- **EDO Error Graph:**
   Displays how well different Equal Division of Octave (EDO) systems match our harmonic series. Common Western music uses 12-EDO. Click any point to see its representation in the circle.
 
   The error is calculated as the weighted distance of harmonics to the closest EDO note:
@@ -21,7 +21,7 @@ This interactive tool helps explore musical harmony through four connected visua
   - `a_n` is the _n_-th harmonic amplitude
   - `x_n` is the pitch value (in "semitones") (`EDO × (log₂(n) mod 1)`)
 
-  - **Harmonic Circle:**  
+  - **Harmonic Circle:**
   Shows harmonics arranged in a circle, with colors indicating how well they match the selected EDO system (green = good match, red = poor match). Blue lines show the EDO divisions.
 
 ## Advanced editing
@@ -30,9 +30,7 @@ This interactive tool helps explore musical harmony through four connected visua
 
 To set more harmonics than the default range, set the `harmonics` variable in the URL. For example, to set 80 harmonics, enter:
 
-```
-https://edo.jakim.it/?harmonics=80
-```
+[`https://edo.jakim.it/?harmonics=80`](https://edo.jakim.it/?harmonics=80)
 
 ### Custom series
 
@@ -56,8 +54,6 @@ updateAll();
 
 Finally, you can provide a custom series via a URL in the following format:
 
-```
-https://edo.jakim.it/?1.0=1.0&1.75=0.25&2.44=0.1&3=0.05&4.47=0.02
-```
+[`https://edo.jakim.it/?1.0=1.0&1.75=0.25&2.44=0.1&3=0.05&4.47=0.02`](https://edo.jakim.it/?1.0=1.0&1.75=0.25&2.44=0.1&3=0.05&4.47=0.02)
 
-where each harmonic is set by `harmonic=value` pairs, joined by `&`. 
+where each harmonic is set by `harmonic=value` pairs, joined by `&`.
