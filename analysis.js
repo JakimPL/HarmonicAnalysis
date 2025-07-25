@@ -198,6 +198,7 @@ function updateHarmonicSeries() {
         if (isDragging) {
             isDragging = false;
             updateDissonanceGraph();
+            updateHarmonicCircle();
         }
     });
 
@@ -549,7 +550,7 @@ function updateEdoError() {
         .on("click", function(event, d) {
             const edoInput = document.getElementById("edo-input");
             edoInput.value = d.edo;
-            updateHarmonicCircle(d.edo);
+            updateHarmonicCircle();
             updateDissonanceGraph();
         })
         .on("mouseover", function(event, d) {
@@ -580,7 +581,9 @@ function updateEdoError() {
         .on("mouseout", hideTooltip);
 }
 
-function updateHarmonicCircle(edo) {
+function updateHarmonicCircle() {
+    const edo = parseInt(document.getElementById("edo-input").value);
+
     let maxEdo = parseInt(maxEdoInput.value);
     if (maxEdo !== null && edo > maxEdo) {
         edo = maxEdo;
@@ -756,12 +759,12 @@ function updateAll() {
     updateHarmonicSeries();
     updateDissonanceGraph();
     updateEdoError();
-    updateHarmonicCircle(parseInt(document.getElementById("edo-input").value));
+    updateHarmonicCircle();
 }
 
 document.getElementById("edo-input").addEventListener("change", (e) => {
     const edo = parseInt(e.target.value);
-    updateHarmonicCircle(edo);
+    updateHarmonicCircle();
     updateDissonanceGraph();
 });
 
@@ -782,7 +785,7 @@ minEdoInput.addEventListener("input", () => {
 maxEdoInput.addEventListener("input", () => {
     updateEdoInputs();
     updateEdoError();
-    updateHarmonicCircle(parseInt(document.getElementById("edo-input").value));
+    updateHarmonicCircle();
 });
 
 updateHarmonicSeriesFromURL();
