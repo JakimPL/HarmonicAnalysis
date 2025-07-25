@@ -53,8 +53,8 @@
     </div>
     <div class="description">
         <h1>Musical Harmony Analysis Tool</h1>
+        <h2>Features</h2>
         <p>This interactive tool helps explore musical harmony through four connected visualizations:</p>
-
         <ul>
             <li><strong>Harmonic Series:</strong> Drag the blue bars to adjust the strength of each harmonic. These changes affect how the sound will be produced.</li>
             <li><strong>Dissonance Graph:</strong> Shows how pleasant or harsh two notes sound together at different intervals. Click anywhere on the line to hear the sound. You can change the base note frequency below the graph.</li>
@@ -76,7 +76,9 @@
             </li>
         </ul>
         <h2>Advanced editing</h2>
+        <h3>Number of harmonics</h3>
         <p>To set more harmonics than the default range, set the <code>harmonics</code> variable in the URL. For example, to set 80 harmonics, enter:</p>
+        <h3>Custom series</h3>
         <pre><code>https://edo.jakim.it/?harmonics=80</code></pre>
         <p>If you want to provide non-standard (fractional) harmonics, or harmonics beyond the given range, you may use the console and edit the <code>harmonicSeries</code> variable directly. For example, you can add a single harmonic by:</p>
         <pre><code>harmonicSeries[1.5] = 0.5;</code></pre>

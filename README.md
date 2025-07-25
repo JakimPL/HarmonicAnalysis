@@ -1,5 +1,7 @@
 # Musical Harmony Analysis Tool
 
+## Features
+
 This interactive tool helps explore musical harmony through four connected visualizations:
 
 - **Harmonic Series:**  
@@ -24,11 +26,15 @@ This interactive tool helps explore musical harmony through four connected visua
 
 ## Advanced editing
 
+### Number of harmonics
+
 To set more harmonics than the default range, set the `harmonics` variable in the URL. For example, to set 80 harmonics, enter:
 
 ```
 https://edo.jakim.it/?harmonics=80
 ```
+
+### Custom series
 
 If you want to provide non-standard (fractional) harmonics, or harmonics beyond the given range, you may use the console and edit the `harmonicSeries` variable directly. For example, you can add a single harmonic by:
 
