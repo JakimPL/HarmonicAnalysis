@@ -22,7 +22,7 @@ This interactive tool helps explore musical harmony through four connected visua
   - `x_n` is the pitch value (in "semitones") (`EDO × (log₂(n) mod 1)`)
 
   - **Harmonic Circle:**
-  Shows harmonics arranged in a circle, with colors indicating how well they match the selected EDO system (green = good match, red = poor match). Blue lines show the EDO divisions.
+  Shows harmonics arranged in a circle, with colors indicating how well they match the selected EDO system (<span style="color:#4daf4a;font-weight:bold;">green</span> — good match, <span style="color:#e41a1c;font-weight:bold;">red</span> — poor match). <span style="color:#1f77b4;font-weight:bold;">Blue</span> lines show the EDO divisions.
 
 ## Advanced editing
 
@@ -56,4 +56,4 @@ Finally, you can provide a custom series via a URL in the following format:
 
 [`https://edo.jakim.it/?1.0=1.0&1.75=0.25&2.44=0.1&3=0.05&4.47=0.02`](https://edo.jakim.it/?1.0=1.0&1.75=0.25&2.44=0.1&3=0.05&4.47=0.02)
 
-where each harmonic is set by `harmonic=value` pairs, joined by `&`.
+where each harmonic is set by `harmonic=amplitude` pairs, joined by `&`.
