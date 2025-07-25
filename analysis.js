@@ -12,6 +12,17 @@ setDimensions();
 let harmonics = 32;
 let harmonicSeries = {};
 
+const intervals = [
+    { ratio: 1, name: "unison" },
+    { ratio: 9/8, name: "major second" },
+    { ratio: 5/4, name: "major third" },
+    { ratio: 4/3, name: "perfect fourth" },
+    { ratio: 3/2, name: "perfect fifth" },
+    { ratio: 5/3, name: "major sixth" },
+    { ratio: 15/8, name: "major seventh" },
+    { ratio: 2, name: "octave" }
+];
+
 const harmonicsSvg = d3.select("#harmonics")
     .append("svg")
     .attr("width", width)
@@ -137,6 +148,8 @@ function updateHarmonicSeries() {
         }
     }
 
+    harmonicsSvg.selectAll("*").remove();
+
     harmonicsSvg
         .attr("width", width)
         .attr("height", height);
@@ -221,8 +234,6 @@ function updateHarmonicSeries() {
         }
     });
 
-    harmonicsSvg.selectAll(".axis").remove();
-
     harmonicsSvg.append("g")
         .attr("class", "axis")
         .attr("transform", `translate(0,${y(0)})`)
@@ -232,6 +243,21 @@ function updateHarmonicSeries() {
         .attr("class", "axis")
         .attr("transform", `translate(${margins.left},0)`)
         .call(d3.axisLeft(y));
+
+    harmonicsSvg.append("text")
+        .attr("class", "axis-label")
+        .attr("x", width / 2)
+        .attr("y", height - 2)
+        .attr("text-anchor", "middle")
+        .text("harmonic");
+
+    harmonicsSvg.append("text")
+        .attr("class", "axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -(height / 2))
+        .attr("y", 10)
+        .attr("text-anchor", "middle")
+        .text("amplitude");
 }
 
 function updateDissonanceGraph() {
@@ -248,7 +274,7 @@ function updateDissonanceGraph() {
 
     const y = d3.scaleLinear()
         .range([height - margins.bottom, margins.top])
-        .domain([0, 1.05]);
+        .domain([-0.04, 1.04]);
 
     const line = d3.line()
         .x(d => x(d[0]))
@@ -285,7 +311,7 @@ function updateDissonanceGraph() {
 
     dissonanceSvg.append("g")
         .attr("class", "axis")
-        .attr("transform", `translate(0,${height - margins.bottom})`)
+        .attr("transform", `translate(0,${y(0)})`)
         .call(d3.axisBottom(x).tickFormat(d3.format(".2f")));
 
     dissonanceSvg.append("g")
@@ -296,7 +322,7 @@ function updateDissonanceGraph() {
     dissonanceSvg.append("text")
         .attr("class", "axis-label")
         .attr("x", width / 2)
-        .attr("y", height - 1)
+        .attr("y", height - 2)
         .attr("text-anchor", "middle")
         .style("font-size", "12px")
         .text("frequency ratio");
@@ -309,17 +335,6 @@ function updateDissonanceGraph() {
         .attr("text-anchor", "middle")
         .style("font-size", "12px")
         .text("dissonance");
-
-    const intervals = [
-        { ratio: 1, name: "unison" },
-        { ratio: 9/8, name: "major second" },
-        { ratio: 5/4, name: "major third" },
-        { ratio: 4/3, name: "perfect fourth" },
-        { ratio: 3/2, name: "perfect fifth" },
-        { ratio: 5/3, name: "major sixth" },
-        { ratio: 15/8, name: "major seventh" },
-        { ratio: 2, name: "octave" }
-    ];
 
     dissonanceSvg.selectAll(".annotation")
         .data(intervals)
@@ -532,7 +547,7 @@ function updateEdoError() {
         .attr("class", "axis-label")
         .attr("transform", "rotate(-90)")
         .attr("x", -graphHeight / 2)
-        .attr("y", -margin.left + 8)
+        .attr("y", -margin.left + 7)
         .attr("text-anchor", "middle")
         .style("font-size", "12px")
         .text("error");

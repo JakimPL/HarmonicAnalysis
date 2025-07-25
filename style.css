@@ -129,16 +129,14 @@ h2 {
     user-select: none;
 }
 
-.axis text,
+
 .axis-label {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+    font-size: 12px;
     user-select: none;
+    pointer-events: none;
 }
 
 .axis text,
-.axis-label,
 .annotation,
 path {
     pointer-events: none;
