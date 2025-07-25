@@ -1,4 +1,4 @@
-const MAX_HARMONICS = 24;
+const MAX_HARMONICS = 100;
 const BASE_FREQUENCY = 220;
 const EDO_LIMIT = 10000;
 const SOUND_DURATION = 1.0;
@@ -9,10 +9,8 @@ const WIDTH = dimensions.width;
 const HEIGHT = dimensions.height;
 const MARGIN = dimensions.margins;
 
+let harmonics = 32;
 let harmonicSeries = {};
-for (let i = 1; i <= MAX_HARMONICS; i++) {
-    harmonicSeries[i] = 1 / Math.pow(i, 1.5);
-}
 
 const harmonicsSvg = d3.select("#harmonics")
     .append("svg")
@@ -51,8 +49,18 @@ function updateHarmonicSeriesFromURL() {
         }
     });
 
- if (Object.keys(newHarmonicSeries).length > 0) {
+    if (Object.keys(newHarmonicSeries).length > 0) {
         harmonicSeries = newHarmonicSeries;
+    } else {
+        if (urlParams.has("harmonics")) {
+            const parsedValue = parseInt(urlParams.get("harmonics"));
+            if (!isNaN(parsedValue) && parsedValue >= 1) {
+                harmonics = Math.min(parsedValue, MAX_HARMONICS);
+            }
+        }
+        for (let i = 1; i <= harmonics; i++) {
+            harmonicSeries[i] = 1 / Math.pow(i, 1.5);
+        }
     }
 }
 
