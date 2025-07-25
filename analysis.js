@@ -1,4 +1,4 @@
-const MAX_HARMONICS = 32;
+const MAX_HARMONICS = 24;
 const BASE_FREQUENCY = 220;
 const EDO_LIMIT = 10000;
 const SOUND_DURATION = 1.0;
@@ -82,7 +82,6 @@ function updateHarmonicSeries() {
     sortHarmonicSeries();
 
     const maxKey = Math.max(...Object.keys(harmonicSeries).map(Number));
-    const barWidth = 10;
 
     const x = d3.scaleLinear()
         .range([MARGIN.left, WIDTH - MARGIN.right])
@@ -93,6 +92,16 @@ function updateHarmonicSeries() {
         .domain([-0.05, 1]);
 
     let isDragging = false;
+
+    const harmonicKeys = Object.keys(harmonicSeries).map(Number).sort((a, b) => a - b);
+    let barWidth = 10; // Default bar width
+    if (harmonicKeys.length > 1) {
+        const distances = harmonicKeys.map((key, i) => {
+            if (i === 0) return Infinity;
+            return x(harmonicKeys[i]) - x(harmonicKeys[i - 1]);
+        });
+        barWidth = Math.min(...distances) * 0.8; // Use 80% of the minimum distance
+    }
 
     function updateAmplitude(event) {
         const mouseX = d3.pointer(event)[0];
