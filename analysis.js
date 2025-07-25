@@ -719,7 +719,7 @@ function updateHarmonicCircle(edo) {
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
                 .attr("font-size", "10px")
-                .text(harmonic)
+                .text(harmonic % 1 === 0 ? harmonic : parseFloat(harmonic).toFixed(2)) // Apply toFixed(2) only if harmonic is not an integer
                 .on("mouseover", function(event) {
                     line.attr("stroke-width", 6);
                     showTooltip(event, data);
