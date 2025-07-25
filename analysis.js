@@ -72,7 +72,7 @@ function updateHarmonicSeries() {
 
     const y = d3.scaleLinear()
         .range([HEIGHT - MARGIN.bottom, MARGIN.top])
-        .domain([0, 1]);
+        .domain([-0.05, 1]);
 
     let isDragging = false;
 
@@ -91,8 +91,9 @@ function updateHarmonicSeries() {
                 harmonicSeries[closestHarmonic] = newAmplitude;
                 harmonicsSvg.selectAll("rect")
                     .data(Object.entries(harmonicSeries))
-                    .attr("y", ([_, amplitude]) => y(amplitude))
-                    .attr("height", ([_, amplitude]) => HEIGHT - MARGIN.bottom - y(amplitude))
+                    .join("rect")
+                    .attr("y", ([_, amplitude]) => Math.min(y(amplitude), y(0)))
+                    .attr("height", ([_, amplitude]) => Math.abs(y(amplitude) - y(0)))
                     .attr("fill", ([harmonic, _]) => {
                         const mouseX = d3.pointer(event)[0];
                         const barStart = x(harmonic) - barWidth / 2;
@@ -108,9 +109,9 @@ function updateHarmonicSeries() {
         .join("rect")
         .attr("class", "bar")
         .attr("x", ([harmonic, _]) => x(harmonic) - barWidth / 2)
-        .attr("y", ([_, amplitude]) => y(amplitude))
+        .attr("y", ([_, amplitude]) => Math.min(y(amplitude), y(0)))
         .attr("width", barWidth)
-        .attr("height", ([_, amplitude]) => HEIGHT - MARGIN.bottom - y(amplitude))
+        .attr("height", ([_, amplitude]) => Math.abs(y(amplitude) - y(0)))
         .attr("fill", "#1f77b4")
         .on("mouseover", function (event, [harmonic, amplitude]) {
             d3.select(this).attr("fill", "#ff7f0e");
@@ -186,7 +187,7 @@ function updateHarmonicSeries() {
 
     harmonicsSvg.append("g")
         .attr("class", "axis")
-        .attr("transform", `translate(0,${HEIGHT - MARGIN.bottom})`)
+        .attr("transform", `translate(0,${y(0)})`)
         .call(d3.axisBottom(x));
 
     harmonicsSvg.append("g")
