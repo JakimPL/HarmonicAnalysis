@@ -198,6 +198,30 @@ path {
     pointer-events: all;
 }
 
+.scroll-indicator {
+    display: flex;
+    justify-content: center;
+    margin-top: -24px;
+    position: relative;
+    z-index: 20;
+    font-size: 2em;
+    color: #bbb;
+    pointer-events: none;
+    animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(-12px);
+    }
+
+    50% {
+        transform: translateY(12px);
+    }
+}
+
 input[type="number"] {
     width: 60px;
     padding: 4px;
@@ -208,7 +232,7 @@ input[type="number"] {
 
 :root {
     --gap: 40px;
-    --padding-x: 40px;
+    --padding-x: 160px;
     --padding-y: 120px;
     --width: 450px;
     --height: 250px;
