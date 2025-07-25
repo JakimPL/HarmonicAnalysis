@@ -109,7 +109,10 @@ h2 {
     font-size: 16px;
 }
 
-#harmonics, #dissonance, #edo-error, #harmonic-circle {
+#harmonics,
+#dissonance,
+#edo-error,
+#harmonic-circle {
     width: 100%;
     flex-grow: 1;
     display: flex;
@@ -126,15 +129,62 @@ h2 {
     user-select: none;
 }
 
-.axis text, .axis-label {
+.axis text,
+.axis-label {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
 }
 
-.axis text, .axis-label, .annotation, path {
+.axis text,
+.axis-label,
+.annotation,
+path {
     pointer-events: none;
+}
+
+.harmonic-circle-tooltip {
+    z-index: 2000;
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 5px;
+}
+
+.edo-error-tooltip {
+    z-index: 2000;
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 5px;
+}
+
+.dissonance-hover-box {
+    fill: rgba(255, 255, 255, 0.8);
+    stroke: #ccc;
+    opacity: 0;
+}
+
+.dissonance-hover-point {
+    fill: #ff7f0e;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dissonance-hover-label {
+    opacity: 0;
+    pointer-events: none;
+    font-size: 10px;
+}
+
+.dissonance-overlay {
+    fill: none;
+    pointer-events: all;
 }
 
 input[type="number"] {

@@ -7,7 +7,7 @@ const SNAPPING_THRESHOLD = 0.01;
 let width = -1;
 let height = -1;
 let margins = {};
-dimensions = setDimensions();
+setDimensions();
 
 let harmonics = 32;
 let harmonicSeries = {};
@@ -346,37 +346,28 @@ function updateDissonanceGraph() {
                 .text(d.name);
         });
 
+
     const hoverBox = dissonanceSvg.append("rect")
-        .attr("class", "hover-box")
-        .attr("fill", "rgba(255, 255, 255, 0.8)")
-        .attr("stroke", "#ccc")
+        .attr("class", "dissonance-hover-box")
         .attr("rx", 4)
-        .attr("ry", 4)
-        .style("opacity", 0);
+        .attr("ry", 4);
 
     const hoverPoint = dissonanceSvg.append("circle")
-        .attr("class", "hover-point")
-        .attr("r", 4)
-        .attr("fill", "#ff7f0e")
-        .style("opacity", 0)
-        .style("pointer-events", "none");
+        .attr("class", "dissonance-hover-point")
+        .attr("r", 4);
 
     const hoverLabel = dissonanceSvg.append("text")
-        .attr("class", "hover-label")
+        .attr("class", "dissonance-hover-label")
         .attr("text-anchor", "middle")
-        .attr("font-size", "10px")
-        .style("opacity", 0)
-        .style("pointer-events", "none");
+        .attr("font-size", "10px");
 
 
     const overlay = dissonanceSvg.append("rect")
-        .attr("class", "overlay")
+        .attr("class", "dissonance-overlay")
         .attr("x", margins.left)
         .attr("y", margins.top)
         .attr("width", width - margins.left - margins.right)
-        .attr("height", height - margins.top - margins.bottom)
-        .style("fill", "none")
-        .style("pointer-events", "all");
+        .attr("height", height - margins.top - margins.bottom);
 
     function getSnappedRatio(ratio, edo) {
         const logRatio = Math.log2(ratio);
@@ -523,13 +514,7 @@ function updateEdoError() {
 
     const tooltip = d3.select("body")
         .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0)
-        .style("position", "absolute")
-        .style("background-color", "white")
-        .style("border", "1px solid #ddd")
-        .style("padding", "5px")
-        .style("pointer-events", "none");
+        .attr("class", "edo-error-tooltip");
 
     svg.append("text")
         .attr("class", "axis-label")
@@ -649,13 +634,7 @@ function updateHarmonicCircle() {
 
     const tooltip = d3.select("body")
         .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0)
-        .style("position", "absolute")
-        .style("background-color", "white")
-        .style("border", "1px solid #ddd")
-        .style("padding", "5px")
-        .style("pointer-events", "none");
+        .attr("class", "harmonic-circle-tooltip");
 
     for (let i = 0; i < edo; i++) {
         const angle = (2 * Math.PI * i) / edo - Math.PI / 2;
