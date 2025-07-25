@@ -9,8 +9,102 @@ body {
 
 .description {
     max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 20px;
+    margin: 32px auto 24px auto;
+    padding: 0 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    border: 1px solid #eee;
+}
+
+.desc-features {
+    margin-bottom: 32px;
+}
+
+.feature-card {
+    background: #f7f8fa;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    padding: 18px 20px 12px 20px;
+    margin-bottom: 18px;
+    border-left: 4px solid #b3c6ff;
+}
+
+.feature-card h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.desc-advanced {
+    margin-bottom: 0;
+}
+
+.advanced-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    padding: 16px 18px 10px 18px;
+    margin-bottom: 16px;
+    border-left: 4px solid #ffd580;
+}
+
+.advanced-card h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.05em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.formula-block {
+    background: #eef3fa;
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin: 12px 0 0 0;
+    font-size: 0.98em;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.formula-label {
+    font-weight: bold;
+    color: #3a5ca8;
+    margin-right: 8px;
+}
+
+.formula-math {
+    margin: 8px 0 8px 0;
+    font-size: 1.08em;
+    color: #2d3a4a;
+}
+
+.code-block {
+    background: #f5f7fa;
+    color: #2d3a4a;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 8px 0 8px 0;
+    font-size: 0.98em;
+    overflow-x: auto;
+}
+
+.code-block a {
+    color: #1976d2;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.code-block a:hover {
+    color: #0d47a1;
+    text-decoration: underline;
+}
 }
 
 .description h1 {
