@@ -4,33 +4,33 @@ const EDO_LIMIT = 10000;
 const SOUND_DURATION = 1.0;
 const SNAPPING_THRESHOLD = 0.01;
 
-const dimensions = getDimensions();
-const WIDTH = dimensions.width;
-const HEIGHT = dimensions.height;
-const MARGIN = dimensions.margins;
+let width = -1;
+let height = -1;
+let margins = {};
+dimensions = setDimensions();
 
 let harmonics = 32;
 let harmonicSeries = {};
 
 const harmonicsSvg = d3.select("#harmonics")
     .append("svg")
-    .attr("width", WIDTH)
-    .attr("height", HEIGHT);
+    .attr("width", width)
+    .attr("height", height);
 
 const dissonanceSvg = d3.select("#dissonance")
     .append("svg")
-    .attr("width", WIDTH)
-    .attr("height", HEIGHT);
+    .attr("width", width)
+    .attr("height", height);
 
 const edoErrorSvg = d3.select("#edo-error")
     .append("svg")
-    .attr("width", WIDTH)
-    .attr("height", HEIGHT);
+    .attr("width", width)
+    .attr("height", height);
 
 const harmonicCircleSvg = d3.select("#harmonic-circle")
     .append("svg")
-    .attr("width", HEIGHT)
-    .attr("height", HEIGHT);
+    .attr("width", height)
+    .attr("height", height);
 
 const minEdoInput = document.getElementById("min-edo-input");
 const maxEdoInput = document.getElementById("max-edo-input");
@@ -64,18 +64,16 @@ function updateHarmonicSeriesFromURL() {
     }
 }
 
-function getDimensions(selector) {
+function setDimensions(selector) {
     const root = getComputedStyle(document.documentElement);
-    const width = parseInt(root.getPropertyValue('--width'));
-    const height = parseInt(root.getPropertyValue('--height'));
-    const margins = {
+    width = parseInt(root.getPropertyValue('--width'));
+    height = parseInt(root.getPropertyValue('--height'));
+    margins = {
         top: parseInt(root.getPropertyValue('--margin-top')),
         right: parseInt(root.getPropertyValue('--margin-right')),
         bottom: parseInt(root.getPropertyValue('--margin-bottom')),
         left: parseInt(root.getPropertyValue('--margin-left'))
     };
-
-    return { width, height, margins };
 }
 
 function sortHarmonicSeries() {
@@ -92,23 +90,23 @@ function updateHarmonicSeries() {
     const maxKey = Math.max(...Object.keys(harmonicSeries).map(Number));
 
     const x = d3.scaleLinear()
-        .range([MARGIN.left, WIDTH - MARGIN.right])
+        .range([margins.left, width - margins.right])
         .domain([0, maxKey + 1]);
 
     const y = d3.scaleLinear()
-        .range([HEIGHT - MARGIN.bottom, MARGIN.top])
+        .range([height - margins.bottom, margins.top])
         .domain([-0.05, 1]);
 
     let isDragging = false;
 
     const harmonicKeys = Object.keys(harmonicSeries).map(Number).sort((a, b) => a - b);
-    let barWidth = 10; // Default bar width
+    let barWidth = 10;
     if (harmonicKeys.length > 1) {
         const distances = harmonicKeys.map((key, i) => {
             if (i === 0) return Infinity;
             return x(harmonicKeys[i]) - x(harmonicKeys[i - 1]);
         });
-        barWidth = Math.min(...distances) * 0.8; // Use 80% of the minimum distance
+        barWidth = Math.min(...distances) * 0.8;
     }
 
     function updateAmplitude(event) {
@@ -138,6 +136,10 @@ function updateHarmonicSeries() {
             }
         }
     }
+
+    harmonicsSvg
+        .attr("width", width)
+        .attr("height", height);
 
     harmonicsSvg.selectAll("rect")
         .data(Object.entries(harmonicSeries))
@@ -172,7 +174,7 @@ function updateHarmonicSeries() {
         const mouseX = d3.pointer(event)[0];
         const mouseY = d3.pointer(event)[1];
 
-        if (mouseX < MARGIN.left || mouseX > WIDTH - MARGIN.right || mouseY < MARGIN.top || mouseY > HEIGHT - MARGIN.bottom) {
+        if (mouseX < margins.left || mouseX > width - margins.right || mouseY < margins.top || mouseY > height - margins.bottom) {
             harmonicsSvg.selectAll("rect").attr("fill", "#1f77b4");
             harmonicsSvg.selectAll(".hover-label").remove();
             return;
@@ -228,7 +230,7 @@ function updateHarmonicSeries() {
 
     harmonicsSvg.append("g")
         .attr("class", "axis")
-        .attr("transform", `translate(${MARGIN.left},0)`)
+        .attr("transform", `translate(${margins.left},0)`)
         .call(d3.axisLeft(y));
 }
 
@@ -241,11 +243,11 @@ function updateDissonanceGraph() {
     const graph = getDissonanceGraph(series, baseFrequency);
 
     const x = d3.scaleLog()
-        .range([MARGIN.left, WIDTH - MARGIN.right])
+        .range([margins.left, width - margins.right])
         .domain([0.99, 2.02]);
 
     const y = d3.scaleLinear()
-        .range([HEIGHT - MARGIN.bottom, MARGIN.top])
+        .range([height - margins.bottom, margins.top])
         .domain([0, 1.05]);
 
     const line = d3.line()
@@ -256,15 +258,19 @@ function updateDissonanceGraph() {
 
     dissonanceSvg.selectAll("*").remove();
 
+    dissonanceSvg
+        .attr("width", width)
+        .attr("height", height);
+
     for (let i = 0; i <= edo; i++) {
         const ratio = Math.pow(2, i / edo);
         const xPos = x(ratio);
 
         dissonanceSvg.append("line")
             .attr("x1", xPos)
-            .attr("y1", MARGIN.top)
+            .attr("y1", margins.top)
             .attr("x2", xPos)
-            .attr("y2", HEIGHT - MARGIN.bottom)
+            .attr("y2", height - margins.bottom)
             .attr("stroke", "gray")
             .attr("stroke-dasharray", "4,2")
             .attr("stroke-width", 1);
@@ -279,18 +285,18 @@ function updateDissonanceGraph() {
 
     dissonanceSvg.append("g")
         .attr("class", "axis")
-        .attr("transform", `translate(0,${HEIGHT - MARGIN.bottom})`)
+        .attr("transform", `translate(0,${height - margins.bottom})`)
         .call(d3.axisBottom(x).tickFormat(d3.format(".2f")));
 
     dissonanceSvg.append("g")
         .attr("class", "axis")
-        .attr("transform", `translate(${MARGIN.left},0)`)
+        .attr("transform", `translate(${margins.left},0)`)
         .call(d3.axisLeft(y));
 
     dissonanceSvg.append("text")
         .attr("class", "axis-label")
-        .attr("x", WIDTH / 2)
-        .attr("y", HEIGHT - 1)
+        .attr("x", width / 2)
+        .attr("y", height - 1)
         .attr("text-anchor", "middle")
         .style("font-size", "12px")
         .text("frequency ratio");
@@ -298,7 +304,7 @@ function updateDissonanceGraph() {
     dissonanceSvg.append("text")
         .attr("class", "axis-label")
         .attr("transform", "rotate(-90)")
-        .attr("x", -(HEIGHT / 2))
+        .attr("x", -(height / 2))
         .attr("y", 10)
         .attr("text-anchor", "middle")
         .style("font-size", "12px")
@@ -365,10 +371,10 @@ function updateDissonanceGraph() {
 
     const overlay = dissonanceSvg.append("rect")
         .attr("class", "overlay")
-        .attr("x", MARGIN.left)
-        .attr("y", MARGIN.top)
-        .attr("width", WIDTH - MARGIN.left - MARGIN.right)
-        .attr("height", HEIGHT - MARGIN.top - MARGIN.bottom)
+        .attr("x", margins.left)
+        .attr("y", margins.top)
+        .attr("width", width - margins.left - margins.right)
+        .attr("height", height - margins.top - margins.bottom)
         .style("fill", "none")
         .style("pointer-events", "all");
 
@@ -466,8 +472,8 @@ function updateDissonanceGraph() {
 
 function updateEdoError() {
     const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    const width = WIDTH - margin.left - margin.right;
-    const height = HEIGHT - margin.top - margin.bottom;
+    const graphWidth = width - margin.left - margin.right;
+    const graphHeight = height - margin.top - margin.bottom;
     const series = { ...harmonicSeries };
 
     const data = [];
@@ -491,20 +497,24 @@ function updateEdoError() {
 
     const xScale = d3.scaleLinear()
         .domain([minEdo - 1, maxEdo + 1])
-        .range([0, width]);
+        .range([0, graphWidth]);
 
     const yScale = d3.scaleLinear()
         .domain([0, d3.max(data, d => d.error) + 0.05])
-        .range([height, 0]);
+        .range([graphHeight, 0]);
 
     edoErrorSvg.selectAll("*").remove();
+
+    edoErrorSvg
+        .attr("width", width)
+        .attr("height", height);
 
     const svg = edoErrorSvg.append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
     svg.append("g")
         .attr("class", "axis")
-        .attr("transform", `translate(0,${height})`)
+        .attr("transform", `translate(0,${graphHeight})`)
         .call(d3.axisBottom(xScale));
 
     svg.append("g")
@@ -522,8 +532,8 @@ function updateEdoError() {
 
     svg.append("text")
         .attr("class", "axis-label")
-        .attr("x", width / 2)
-        .attr("y", height + margin.bottom - 1)
+        .attr("x", graphWidth / 2)
+        .attr("y", graphHeight + margin.bottom - 1)
         .attr("text-anchor", "middle")
         .style("font-size", "12px")
         .text("EDO");
@@ -535,7 +545,7 @@ function updateEdoError() {
     svg.append("text")
         .attr("class", "axis-label")
         .attr("transform", "rotate(-90)")
-        .attr("x", -height / 2)
+        .attr("x", -graphHeight / 2)
         .attr("y", -margin.left + 8)
         .attr("text-anchor", "middle")
         .style("font-size", "12px")
@@ -614,15 +624,19 @@ function updateHarmonicCircle() {
         playSound(envelopedWave, baseFrequency * factor, SOUND_DURATION);
     }
 
-    const radius = (HEIGHT / 2 - MARGIN.top) * 0.75;
-    const center = HEIGHT / 2;
+    const radius = (height / 2 - margins.top) * 0.75;
+    const center = height / 2;
     const maxAmplitude = d3.max(Object.values(harmonicSeries));
-
-    harmonicCircleSvg.selectAll("*").remove();
 
     const colorScale = d3.scaleLinear()
         .domain([0, 0.25])
         .range(["#4daf4a", "#e41a1c"]);
+
+    harmonicCircleSvg.selectAll("*").remove();
+
+    harmonicCircleSvg
+        .attr("width", height)
+        .attr("height", height);
 
     harmonicCircleSvg.append("circle")
         .attr("cx", center)
@@ -739,7 +753,7 @@ function updateHarmonicCircle() {
                 .attr("text-anchor", "middle")
                 .attr("dominant-baseline", "middle")
                 .attr("font-size", "10px")
-                .text(harmonic % 1 === 0 ? harmonic : parseFloat(harmonic).toFixed(2)) // Apply toFixed(2) only if harmonic is not an integer
+                .text(harmonic % 1 === 0 ? harmonic : parseFloat(harmonic).toFixed(2))
                 .on("mouseover", function(event) {
                     line.attr("stroke-width", 6);
                     showTooltip(event, data);
@@ -794,13 +808,20 @@ document.getElementById("base-frequency").addEventListener("change", (e) => {
 document.querySelectorAll('.enlarge-icon').forEach(icon => {
     icon.addEventListener('click', (event) => {
         const graph = event.target.closest('.graph');
+        const root = document.documentElement;
+
         if (graph.classList.contains('fullscreen')) {
             graph.classList.remove('fullscreen');
+            root.style.setProperty('--width', '450px');
+            root.style.setProperty('--height', '250px');
         } else {
             document.querySelectorAll('.graph').forEach(g => g.classList.remove('fullscreen'));
             graph.classList.add('fullscreen');
+            root.style.setProperty('--width', '900px');
+            root.style.setProperty('--height', '500px');
         }
-        getDimensions();
+
+        setDimensions();
         updateAll();
     });
 });
