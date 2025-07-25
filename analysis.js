@@ -4,9 +4,14 @@ const EDO_LIMIT = 10000;
 const SOUND_DURATION = 1.0;
 const SNAPPING_THRESHOLD = 0.01;
 
+let baseWidth = -1;
+let baseHeight = -1;
+
 let width = -1;
 let height = -1;
 let margins = {};
+
+updateGraphDimensions();
 setDimensions();
 
 let harmonics = 32;
@@ -75,7 +80,22 @@ function updateHarmonicSeriesFromURL() {
     }
 }
 
-function setDimensions(selector) {
+function updateGraphDimensions() {
+    const root = getComputedStyle(document.documentElement);
+    const gap = parseInt(root.getPropertyValue('--gap'));
+    const paddingX = parseInt(root.getPropertyValue('--padding-x'));
+    const paddingY = parseInt(root.getPropertyValue('--padding-y'));
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    baseWidth = (vw - gap - 2 * paddingX) / 2;
+    baseHeight = (vh - gap - 2 * paddingY) / 2;
+
+    document.documentElement.style.setProperty('--width', `${baseWidth}px`);
+    document.documentElement.style.setProperty('--height', `${baseHeight}px`);
+}
+
+function setDimensions() {
     const root = getComputedStyle(document.documentElement);
     width = parseInt(root.getPropertyValue('--width'));
     height = parseInt(root.getPropertyValue('--height'));
@@ -808,15 +828,21 @@ document.querySelectorAll('.enlarge-icon').forEach(icon => {
 
         if (graph.classList.contains('fullscreen')) {
             graph.classList.remove('fullscreen');
-            root.style.setProperty('--width', '450px');
-            root.style.setProperty('--height', '250px');
+            root.style.setProperty('--width', `${baseWidth}px`);
+            root.style.setProperty('--height', `${baseHeight}px`);
             iconElement.classList.remove('fa-search-minus');
             iconElement.classList.add('fa-search-plus');
         } else {
             document.querySelectorAll('.graph').forEach(g => g.classList.remove('fullscreen'));
             graph.classList.add('fullscreen');
-            root.style.setProperty('--width', '900px');
-            root.style.setProperty('--height', '500px');
+            const computedStyle = getComputedStyle(document.documentElement);
+            const gap = parseInt(computedStyle.getPropertyValue('--gap')) || 0;
+            const paddingX = parseInt(computedStyle.getPropertyValue('--padding-x')) || 0;
+            const paddingY = parseInt(computedStyle.getPropertyValue('--padding-y')) || 0;
+            const fullscreenWidth = window.innerWidth - 2 * paddingX;
+            const fullscreenHeight = window.innerHeight - 2 * paddingY;
+            root.style.setProperty('--width', `${fullscreenWidth}px`);
+            root.style.setProperty('--height', `${fullscreenHeight}px`);
             iconElement.classList.remove('fa-search-plus');
             iconElement.classList.add('fa-search-minus');
         }
