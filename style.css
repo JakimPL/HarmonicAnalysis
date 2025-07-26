@@ -314,7 +314,7 @@ input[type="number"] {
 
 :root {
     --gap: 40px;
-    --padding-x: 160px;
+    --padding-x: 80px;
     --padding-y: 120px;
     --width: 450px;
     --height: 250px;

@@ -845,8 +845,13 @@ document.querySelectorAll('.enlarge-icon').forEach(icon => {
             const gap = parseInt(computedStyle.getPropertyValue('--gap')) || 0;
             const paddingX = parseInt(computedStyle.getPropertyValue('--padding-x')) || 0;
             const paddingY = parseInt(computedStyle.getPropertyValue('--padding-y')) || 0;
-            const fullscreenWidth = window.innerWidth - 2 * paddingX;
-            const fullscreenHeight = window.innerHeight - 2 * paddingY;
+            let fullscreenWidth = window.innerWidth - 2 * paddingX;
+            let fullscreenHeight = window.innerHeight - 2 * paddingY;
+            if (window.innerHeight > window.innerWidth) {
+                const size = Math.min(fullscreenWidth, fullscreenHeight);
+                fullscreenWidth = size;
+                fullscreenHeight = size;
+            }
             root.style.setProperty('--width', `${fullscreenWidth}px`);
             root.style.setProperty('--height', `${fullscreenHeight}px`);
             iconElement.classList.remove('fa-search-plus');
