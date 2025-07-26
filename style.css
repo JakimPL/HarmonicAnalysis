@@ -300,8 +300,14 @@ path {
     z-index: 20;
     font-size: 2em;
     color: #bbb;
-    pointer-events: none;
     animation: bounce 1.5s infinite;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.scroll-indicator:hover {
+    color: #888;
+    filter: drop-shadow(0 2px 6px #aaa);
 }
 
 input[type="number"] {

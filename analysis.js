@@ -901,6 +901,16 @@ document.getElementById("base-frequency").addEventListener("change", (e) => {
     updateDissonanceGraph();
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    var scrollIndicator = document.querySelector('.scroll-indicator');
+    var description = document.querySelector('.description');
+    if (scrollIndicator && description) {
+        scrollIndicator.addEventListener('click', function() {
+            description.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+});
+
 document.querySelectorAll('.enlarge-icon').forEach(icon => {
     icon.addEventListener('click', (event) => {
         const graph = event.target.closest('.graph');
