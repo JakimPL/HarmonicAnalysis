@@ -304,18 +304,6 @@ path {
     animation: bounce 1.5s infinite;
 }
 
-@keyframes bounce {
-
-    0%,
-    100% {
-        transform: translateY(-12px);
-    }
-
-    50% {
-        transform: translateY(12px);
-    }
-}
-
 input[type="number"] {
     width: 60px;
     padding: 4px;
@@ -334,4 +322,23 @@ input[type="number"] {
     --margin-right: 20px;
     --margin-bottom: 30px;
     --margin-left: 40px;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(-12px);
+    }
+
+    50% {
+        transform: translateY(12px);
+    }
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .container {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, 1fr);
+    }
 }

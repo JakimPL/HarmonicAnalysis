@@ -88,8 +88,13 @@ function updateGraphDimensions() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    baseWidth = (vw - gap - 2 * paddingX) / 2;
-    baseHeight = (vh - gap - 2 * paddingY) / 2;
+    if (vw < vh) {
+        baseWidth = vw - 2 * paddingX;
+        baseHeight = (vh - 3 * gap - 2 * paddingY) / 4;
+    } else {
+        baseWidth = (vw - gap - 2 * paddingX) / 2;
+        baseHeight = (vh - gap - 2 * paddingY) / 2;
+    }
 
     document.documentElement.style.setProperty('--width', `${baseWidth}px`);
     document.documentElement.style.setProperty('--height', `${baseHeight}px`);
