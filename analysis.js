@@ -11,9 +11,6 @@ let width = -1;
 let height = -1;
 let margins = {};
 
-updateGraphDimensions();
-setDimensions();
-
 let harmonics = 32;
 let harmonicSeries = {};
 
@@ -27,6 +24,7 @@ const intervals = [
     { ratio: 15/8, name: "major seventh" },
     { ratio: 2, name: "octave" }
 ];
+
 
 const harmonicsSvg = d3.select("#harmonics")
     .append("svg")
@@ -48,9 +46,11 @@ const harmonicCircleSvg = d3.select("#harmonic-circle")
     .attr("width", height)
     .attr("height", height);
 
+
 const minEdoInput = document.getElementById("min-edo-input");
 const maxEdoInput = document.getElementById("max-edo-input");
 const edoInput = document.getElementById("edo-input");
+
 
 function updateHarmonicSeriesFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -134,6 +134,7 @@ function updateHarmonicSeries() {
         .domain([-0.05, 1]);
 
     let isDragging = false;
+    let isTouchDragging = false;
 
     const harmonicKeys = Object.keys(harmonicSeries).map(Number).sort((a, b) => a - b);
     let barWidth = 10;
@@ -146,9 +147,21 @@ function updateHarmonicSeries() {
     }
 
     function updateAmplitude(event) {
-        const mouseX = d3.pointer(event)[0];
+        let pointer;
+        if (event.type && event.type.startsWith('touch')) {
+            const touch = event.touches && event.touches[0] ? event.touches[0] : (event.changedTouches && event.changedTouches[0]);
+            if (!touch) return;
+            const svgRect = harmonicsSvg.node().getBoundingClientRect();
+            pointer = [
+                touch.clientX - svgRect.left,
+                touch.clientY - svgRect.top
+            ];
+        } else {
+            pointer = d3.pointer(event);
+        }
+        const mouseX = pointer[0];
         const harmonicNumber = x.invert(mouseX);
-        const mouseY = d3.pointer(event)[1];
+        const mouseY = pointer[1];
         const newAmplitude = Math.max(0, Math.min(1, y.invert(mouseY)));
 
         const closestHarmonic = Object.keys(harmonicSeries)
@@ -164,7 +177,6 @@ function updateHarmonicSeries() {
                     .attr("y", ([_, amplitude]) => Math.min(y(amplitude), y(0)))
                     .attr("height", ([_, amplitude]) => Math.abs(y(amplitude) - y(0)))
                     .attr("fill", ([harmonic, _]) => {
-                        const mouseX = d3.pointer(event)[0];
                         const barStart = x(harmonic) - barWidth / 2;
                         const barEnd = x(harmonic) + barWidth / 2;
                         return mouseX >= barStart && mouseX <= barEnd ? "#ff7f0e" : "#1f77b4";
@@ -202,6 +214,7 @@ function updateHarmonicSeries() {
             d3.select(this).attr("fill", "#1f77b4");
             harmonicsSvg.selectAll(".hover-label").remove();
         });
+
 
     harmonicsSvg.on("mousedown", function (event) {
         isDragging = true;
@@ -260,6 +273,26 @@ function updateHarmonicSeries() {
         }
     });
 
+    harmonicsSvg.on("touchstart", function(event) {
+        if (event.cancelable) event.preventDefault();
+        isTouchDragging = true;
+        updateAmplitude(event);
+    }, { passive: false });
+    harmonicsSvg.on("touchmove", function(event) {
+        if (!isTouchDragging) return;
+        if (event.cancelable) event.preventDefault();
+        updateAmplitude(event);
+    }, { passive: false });
+    harmonicsSvg.on("touchend", function(event) {
+        if (event.cancelable) event.preventDefault();
+        if (isTouchDragging) {
+            isTouchDragging = false;
+            updateDissonanceGraph();
+            updateEdoError();
+            updateHarmonicCircle();
+        }
+    }, { passive: false });
+
     harmonicsSvg.append("g")
         .attr("class", "axis")
         .attr("transform", `translate(0,${y(0)})`)
@@ -308,6 +341,7 @@ function updateDissonanceGraph() {
 
     const points = graph.ratios.map((ratio, i) => [ratio, graph.values[i]]);
 
+
     dissonanceSvg.selectAll("*").remove();
 
     dissonanceSvg
@@ -317,7 +351,6 @@ function updateDissonanceGraph() {
     for (let i = 0; i <= edo; i++) {
         const ratio = Math.pow(2, i / edo);
         const xPos = x(ratio);
-
         dissonanceSvg.append("line")
             .attr("x1", xPos)
             .attr("y1", margins.top)
@@ -370,14 +403,12 @@ function updateDissonanceGraph() {
         .each(function(d) {
             const xPos = x(d.ratio);
             const yPos = y(graph.function(d.ratio) * graph.normalizer);
-
             d3.select(this)
                 .append("circle")
                 .attr("cx", xPos)
                 .attr("cy", yPos)
                 .attr("r", 3)
                 .attr("fill", "#ffa500");
-
             d3.select(this)
                 .append("text")
                 .attr("x", xPos)
@@ -414,11 +445,9 @@ function updateDissonanceGraph() {
         const logRatio = Math.log2(ratio);
         const closestEdoNote = Math.round(logRatio * edo) / edo;
         const edoSnappedRatio = Math.pow(2, closestEdoNote);
-
         const predefinedIntervals = [1, 9 / 8, 5 / 4, 4 / 3, 3 / 2, 5 / 3, 15 / 8, 2];
         let closestInterval = ratio;
         let minIntervalDiff = Infinity;
-
         predefinedIntervals.forEach(interval => {
             const diff = Math.abs(ratio - interval);
             if (diff < minIntervalDiff) {
@@ -426,7 +455,6 @@ function updateDissonanceGraph() {
                 closestInterval = interval;
             }
         });
-
         const edoDiff = Math.abs(ratio - edoSnappedRatio);
         if (edoDiff < SNAPPING_THRESHOLD || minIntervalDiff < SNAPPING_THRESHOLD) {
             if (minIntervalDiff < edoDiff) {
@@ -435,7 +463,6 @@ function updateDissonanceGraph() {
                 return [edoSnappedRatio, true];
             }
         }
-
         return [ratio, false];
     }
 
@@ -444,33 +471,26 @@ function updateDissonanceGraph() {
             const mouseX = d3.pointer(event)[0];
             let ratio = x.invert(mouseX);
             let snapped = false;
-
             if (ratio >= 1 && ratio <= 2) {
                 const edo = parseInt(document.getElementById("edo-input").value) || 12;
                 [ratio, snapped] = getSnappedRatio(ratio, edo);
-
                 const logRatio = Math.log2(ratio);
                 const note = Math.round(logRatio * edo);
-
                 const value = graph.function(ratio) * graph.normalizer;
                 const xPos = x(ratio);
                 const yPos = y(value);
-
                 const ratioText = `${ratio.toFixed(4)} : ${value.toFixed(4)}`;
                 const lines = snapped ? [`Note: ${note}`, ratioText] : [ratioText];
-
                 hoverPoint
                     .attr("cx", xPos)
                     .attr("cy", yPos)
                     .style("opacity", 1);
-
                 hoverLabel
                     .attr("x", xPos)
                     .attr("y", yPos - 10 - (lines.length - 1) * 15)
-                    .html(() => lines.map((line, i) => `<tspan x="${xPos}" dy="${i === 0 ? 0 : 15}">${line}</tspan>`).join(""))
+                    .html(() => lines.map((line, i) => `<tspan x=\"${xPos}\" dy=\"${i === 0 ? 0 : 15}\">${line}</tspan>`).join(""))
                     .style("opacity", 1)
                     .style("fill", "black");
-
                 const textBBox = hoverLabel.node().getBBox();
                 hoverBox
                     .attr("x", textBBox.x - 5)
@@ -488,18 +508,73 @@ function updateDissonanceGraph() {
         .on("click", function(event) {
             const mouseX = d3.pointer(event)[0];
             let ratio = x.invert(mouseX);
-
             if (ratio >= 1 && ratio <= 2) {
                 const edo = parseInt(document.getElementById("edo-input").value) || 12;
                 ratio = getSnappedRatio(ratio, edo)[0];
-
                 const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
                 const waveform = createWaveform(harmonicSeries);
                 const envelopedWave = applyEnvelope(waveform);
                 const combinedWave = combineWaves(envelopedWave, ratio);
                 playSound(combinedWave, baseFrequency, SOUND_DURATION);
             }
-        });
+        })
+        .on("touchstart", function(event) {
+            if (event.cancelable) event.preventDefault();
+        }, { passive: false })
+        .on("touchmove", function(event) {
+            if (event.cancelable) event.preventDefault();
+            const touch = event.touches && event.touches[0] ? event.touches[0] : (event.changedTouches && event.changedTouches[0]);
+            if (!touch) return;
+            const svgRect = dissonanceSvg.node().getBoundingClientRect();
+            const mouseX = touch.clientX - svgRect.left;
+            let ratio = x.invert(mouseX);
+            let snapped = false;
+            if (ratio >= 1 && ratio <= 2) {
+                const edo = parseInt(document.getElementById("edo-input").value) || 12;
+                [ratio, snapped] = getSnappedRatio(ratio, edo);
+                const logRatio = Math.log2(ratio);
+                const note = Math.round(logRatio * edo);
+                const value = graph.function(ratio) * graph.normalizer;
+                const xPos = x(ratio);
+                const yPos = y(value);
+                const ratioText = `${ratio.toFixed(4)} : ${value.toFixed(4)}`;
+                const lines = snapped ? [`Note: ${note}`, ratioText] : [ratioText];
+                hoverPoint
+                    .attr("cx", xPos)
+                    .attr("cy", yPos)
+                    .style("opacity", 1);
+                hoverLabel
+                    .attr("x", xPos)
+                    .attr("y", yPos - 10 - (lines.length - 1) * 15)
+                    .html(() => lines.map((line, i) => `<tspan x=\"${xPos}\" dy=\"${i === 0 ? 0 : 15}\">${line}</tspan>`).join(""))
+                    .style("opacity", 1)
+                    .style("fill", "black");
+                const textBBox = hoverLabel.node().getBBox();
+                hoverBox
+                    .attr("x", textBBox.x - 5)
+                    .attr("y", textBBox.y - 2)
+                    .attr("width", textBBox.width + 10)
+                    .attr("height", textBBox.height + 4)
+                    .style("opacity", 1);
+            }
+        }, { passive: false })
+        .on("touchend", function(event) {
+            if (event.cancelable) event.preventDefault();
+            const touch = event.changedTouches && event.changedTouches[0] ? event.changedTouches[0] : (event.touches && event.touches[0]);
+            if (!touch) return;
+            const svgRect = dissonanceSvg.node().getBoundingClientRect();
+            const mouseX = touch.clientX - svgRect.left;
+            let ratio = x.invert(mouseX);
+            if (ratio >= 1 && ratio <= 2) {
+                const edo = parseInt(document.getElementById("edo-input").value) || 12;
+                ratio = getSnappedRatio(ratio, edo)[0];
+                const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
+                const waveform = createWaveform(harmonicSeries);
+                const envelopedWave = applyEnvelope(waveform);
+                const combinedWave = combineWaves(envelopedWave, ratio);
+                playSound(combinedWave, baseFrequency, SOUND_DURATION);
+            }
+        }, { passive: false });
 }
 
 function updateEdoError() {
@@ -877,5 +952,13 @@ maxEdoInput.addEventListener("input", () => {
     updateHarmonicCircle();
 });
 
+window.addEventListener("resize", () => {
+    updateGraphDimensions();
+    setDimensions();
+    updateAll();
+});
+
+updateGraphDimensions();
+setDimensions();
 updateHarmonicSeriesFromURL();
 updateAll();
