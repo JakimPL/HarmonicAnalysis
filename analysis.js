@@ -962,7 +962,8 @@ maxEdoInput.addEventListener("input", () => {
     updateHarmonicCircle();
 });
 
-window.addEventListener("resize", () => {
+
+window.addEventListener("orientationchange", () => {
     updateGraphDimensions();
     setDimensions();
     updateAll();
