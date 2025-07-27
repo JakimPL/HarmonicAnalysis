@@ -13,6 +13,7 @@ let margins = {};
 
 let harmonics = 32;
 let harmonicSeries = {};
+let customScale = null;
 
 const intervals = [
     { ratio: 1, name: "unison" },
@@ -51,10 +52,31 @@ const minEdoInput = document.getElementById("min-edo-input");
 const maxEdoInput = document.getElementById("max-edo-input");
 const edoInput = document.getElementById("edo-input");
 
+const urlParams = new URLSearchParams(window.location.search);
 
-function updateHarmonicSeriesFromURL() {
-    const urlParams = new URLSearchParams(window.location.search);
+
+function parseURLParameters() {
     const newHarmonicSeries = {};
+
+    if (urlParams.has("scale")) {
+        const scaleStr = urlParams.get("scale");
+        if (scaleStr) {
+            let scaleArr = [1.0];
+            scaleArr = scaleArr.concat(
+                scaleStr.split(",")
+                    .map(Number)
+                    .filter(x => !isNaN(x) && x !== 0)
+                    .map(x => 2 ** (Math.log2(Math.abs(x)) % 1))
+            );
+            const EPS = 1e-8;
+            scaleArr = scaleArr.filter(x => x > 0)
+                .sort((a, b) => a - b)
+                .filter((x, i, arr) => i === 0 || Math.abs(x - arr[i - 1]) > EPS);
+            if (scaleArr.length > 1) {
+                customScale = scaleArr;
+            }
+        }
+    }
 
     urlParams.forEach((value, key) => {
         const harmonic = parseFloat(key);
@@ -348,17 +370,33 @@ function updateDissonanceGraph() {
         .attr("width", width)
         .attr("height", height);
 
-    for (let i = 0; i <= edo; i++) {
-        const ratio = Math.pow(2, i / edo);
-        const xPos = x(ratio);
-        dissonanceSvg.append("line")
-            .attr("x1", xPos)
-            .attr("y1", margins.top)
-            .attr("x2", xPos)
-            .attr("y2", height - margins.bottom)
-            .attr("stroke", "gray")
-            .attr("stroke-dasharray", "4,2")
-            .attr("stroke-width", 1);
+    if (Array.isArray(customScale) && customScale.length > 0) {
+        customScale.forEach((ratio) => {
+            if (ratio >= 1 && ratio <= 2) {
+                const xPos = x(ratio);
+                dissonanceSvg.append("line")
+                    .attr("x1", xPos)
+                    .attr("y1", margins.top)
+                    .attr("x2", xPos)
+                    .attr("y2", height - margins.bottom)
+                    .attr("stroke", "gray")
+                    .attr("stroke-dasharray", "4,2")
+                    .attr("stroke-width", 1);
+            }
+        });
+    } else {
+        for (let i = 0; i <= edo; i++) {
+            const ratio = Math.pow(2, i / edo);
+            const xPos = x(ratio);
+            dissonanceSvg.append("line")
+                .attr("x1", xPos)
+                .attr("y1", margins.top)
+                .attr("x2", xPos)
+                .attr("y2", height - margins.bottom)
+                .attr("stroke", "gray")
+                .attr("stroke-dasharray", "4,2")
+                .attr("stroke-width", 1);
+        }
     }
 
     dissonanceSvg.append("path")
@@ -442,28 +480,47 @@ function updateDissonanceGraph() {
         .attr("height", height - margins.top - margins.bottom);
 
     function getSnappedRatio(ratio, edo) {
-        const logRatio = Math.log2(ratio);
-        const closestEdoNote = Math.round(logRatio * edo) / edo;
-        const edoSnappedRatio = Math.pow(2, closestEdoNote);
         const predefinedIntervals = [1, 9 / 8, 5 / 4, 4 / 3, 3 / 2, 5 / 3, 15 / 8, 2];
-        let closestInterval = ratio;
-        let minIntervalDiff = Infinity;
-        predefinedIntervals.forEach(interval => {
-            const diff = Math.abs(ratio - interval);
+        let closestInterval = predefinedIntervals[0];
+        let minIntervalDiff = Math.abs(ratio - closestInterval);
+        for (let i = 1; i < predefinedIntervals.length; i++) {
+            const diff = Math.abs(ratio - predefinedIntervals[i]);
             if (diff < minIntervalDiff) {
                 minIntervalDiff = diff;
-                closestInterval = interval;
-            }
-        });
-        const edoDiff = Math.abs(ratio - edoSnappedRatio);
-        if (edoDiff < SNAPPING_THRESHOLD || minIntervalDiff < SNAPPING_THRESHOLD) {
-            if (minIntervalDiff < edoDiff) {
-                return [closestInterval, false];
-            } else {
-                return [edoSnappedRatio, true];
+                closestInterval = predefinedIntervals[i];
             }
         }
-        return [ratio, false];
+
+        if (Array.isArray(customScale) && customScale.length > 0) {
+            let closest = customScale[0];
+            let minDiff = Math.abs(ratio - closest);
+            for (let i = 1; i < customScale.length; i++) {
+                const diff = Math.abs(ratio - customScale[i]);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closest = customScale[i];
+                }
+            }
+            if (minDiff < SNAPPING_THRESHOLD && minDiff < minIntervalDiff) {
+                return [closest, 'custom'];
+            }
+            if (minIntervalDiff < SNAPPING_THRESHOLD) {
+                return [closestInterval, 'interval'];
+            }
+            return [ratio, null];
+        } else {
+            const logRatio = Math.log2(ratio);
+            const closestEdoNote = Math.round(logRatio * edo) / edo;
+            const edoSnappedRatio = Math.pow(2, closestEdoNote);
+            const edoDiff = Math.abs(ratio - edoSnappedRatio);
+            if (edoDiff < SNAPPING_THRESHOLD && edoDiff < minIntervalDiff) {
+                return [edoSnappedRatio, 'edo'];
+            }
+            if (minIntervalDiff < SNAPPING_THRESHOLD) {
+                return [closestInterval, 'interval'];
+            }
+            return [ratio, null];
+        }
     }
 
     overlay
@@ -473,14 +530,25 @@ function updateDissonanceGraph() {
             let snapped = false;
             if (ratio >= 1 && ratio <= 2) {
                 const edo = parseInt(document.getElementById("edo-input").value) || 12;
-                [ratio, snapped] = getSnappedRatio(ratio, edo);
-                const logRatio = Math.log2(ratio);
-                const note = Math.round(logRatio * edo);
+                let snapType;
+                [ratio, snapType] = getSnappedRatio(ratio, edo);
+                let noteText = null;
+                if (snapType === 'edo') {
+                    const logRatio = Math.log2(ratio);
+                    const note = Math.round(logRatio * edo);
+                    noteText = `Note: ${note}`;
+                } else if (snapType === 'custom') {
+                    const idx = customScale.findIndex(r => Math.abs(r - ratio) < 1e-8);
+                    if (idx !== -1) noteText = `Note: ${idx}`;
+                } else if (snapType === 'interval') {
+                    const interval = intervals.find(i => Math.abs(i.ratio - ratio) < 1e-8);
+                    if (interval) noteText = interval.name;
+                }
                 const value = graph.function(ratio) * graph.normalizer;
                 const xPos = x(ratio);
                 const yPos = y(value);
                 const ratioText = `${ratio.toFixed(4)} : ${value.toFixed(4)}`;
-                const lines = snapped ? [`Note: ${note}`, ratioText] : [ratioText];
+                const lines = noteText ? [noteText, ratioText] : [ratioText];
                 hoverPoint
                     .attr("cx", xPos)
                     .attr("cy", yPos)
@@ -531,14 +599,25 @@ function updateDissonanceGraph() {
             let snapped = false;
             if (ratio >= 1 && ratio <= 2) {
                 const edo = parseInt(document.getElementById("edo-input").value) || 12;
-                [ratio, snapped] = getSnappedRatio(ratio, edo);
-                const logRatio = Math.log2(ratio);
-                const note = Math.round(logRatio * edo);
+                let snapType;
+                [ratio, snapType] = getSnappedRatio(ratio, edo);
+                let noteText = null;
+                if (snapType === 'edo') {
+                    const logRatio = Math.log2(ratio);
+                    const note = Math.round(logRatio * edo);
+                    noteText = `EDO note: ${note}`;
+                } else if (snapType === 'custom') {
+                    const idx = customScale.findIndex(r => Math.abs(r - ratio) < 1e-8);
+                    if (idx !== -1) noteText = `Scale note: ${idx}`;
+                } else if (snapType === 'interval') {
+                    const interval = intervals.find(i => Math.abs(i.ratio - ratio) < 1e-8);
+                    if (interval) noteText = interval.name;
+                }
                 const value = graph.function(ratio) * graph.normalizer;
                 const xPos = x(ratio);
                 const yPos = y(value);
                 const ratioText = `${ratio.toFixed(4)} : ${value.toFixed(4)}`;
-                const lines = snapped ? [`Note: ${note}`, ratioText] : [ratioText];
+                const lines = noteText ? [noteText, ratioText] : [ratioText];
                 hoverPoint
                     .attr("cx", xPos)
                     .attr("cy", yPos)
@@ -679,6 +758,7 @@ function updateEdoError() {
         .on("click", function(event, d) {
             const edoInput = document.getElementById("edo-input");
             edoInput.value = d.edo;
+            customScale = null;
             updateHarmonicCircle();
             updateDissonanceGraph();
         })
@@ -711,11 +791,18 @@ function updateEdoError() {
 }
 
 function updateHarmonicCircle() {
-    const edo = parseInt(document.getElementById("edo-input").value);
-
-    let maxEdo = parseInt(maxEdoInput.value);
-    if (maxEdo !== null && edo > maxEdo) {
-        edo = maxEdo;
+    let edo = parseInt(document.getElementById("edo-input").value);
+    let scaleToUse = null;
+    let isCustom = false;
+    if (Array.isArray(customScale) && customScale.length > 0) {
+        scaleToUse = customScale;
+        isCustom = true;
+    } else {
+        let maxEdo = parseInt(maxEdoInput.value);
+        if (maxEdo !== null && edo > maxEdo) {
+            edo = maxEdo;
+        }
+        scaleToUse = Array.from({length: edo}, (_, i) => Math.pow(2, i / edo));
     }
 
     function playHarmonic(harmonic) {
@@ -752,14 +839,18 @@ function updateHarmonicCircle() {
         .append("div")
         .attr("class", "harmonic-circle-tooltip");
 
-    for (let i = 0; i < edo; i++) {
-        const angle = (2 * Math.PI * i) / edo - Math.PI / 2;
+    for (let i = 0; i < scaleToUse.length; i++) {
+        const ratio = scaleToUse[i];
+        let angle;
+        if (isCustom) {
+            angle = 2 * Math.PI * (Math.log2(ratio) % 1) - Math.PI / 2;
+        } else {
+            angle = (2 * Math.PI * i) / scaleToUse.length - Math.PI / 2;
+        }
         const x1 = center + radius * Math.cos(angle);
         const y1 = center + radius * Math.sin(angle);
         const x2 = center + (radius + 40) * Math.cos(angle);
         const y2 = center + (radius + 40) * Math.sin(angle);
-
-        const ratio = Math.pow(2, i / edo);
 
         harmonicCircleSvg.append("line")
             .attr("x1", x1)
@@ -788,10 +879,7 @@ function updateHarmonicCircle() {
                     .attr("stroke-width", 3);
             })
             .on("click", function() {
-                const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
-                const wave = createWaveform(harmonicSeries);
-                const envelopedWave = applyEnvelope(wave, SOUND_DURATION, 0.5);
-                playSound(envelopedWave, baseFrequency * ratio, SOUND_DURATION);
+                playHarmonic(ratio);
             });
     }
 
@@ -800,9 +888,34 @@ function updateHarmonicCircle() {
             .duration(200)
             .style("opacity", .9);
 
-        const log_harmonic = Math.log2(data.harmonic) % 1;
-        const ratio = Math.pow(2, log_harmonic);
-        const note = log_harmonic * edo;
+        let note = null;
+        let ratio = null;
+        if (isCustom && Array.isArray(scaleToUse) && scaleToUse.length > 1) {
+            const logH = Math.log2(data.harmonic) % 1;
+            const scale = scaleToUse;
+            const logScale = scale.map(r => Math.log2(r));
+            const scaleWith2 = scale[scale.length - 1] < 2.0 - 1e-8 ? [...scale, 2.0] : scale;
+            const logScaleWith2 = scaleWith2.map(r => Math.log2(r));
+            let idx = 0;
+            while (idx < logScaleWith2.length - 1 && logH > logScaleWith2[idx + 1] - 1e-8) {
+                idx++;
+            }
+            if (idx >= logScaleWith2.length - 1) idx = logScaleWith2.length - 2;
+            const l0 = logScaleWith2[idx];
+            const l1 = logScaleWith2[idx + 1];
+            const n0 = idx;
+            const n1 = idx + 1;
+            let frac = 0;
+            if (l1 - l0 > 1e-8) {
+                frac = (logH - l0) / (l1 - l0);
+            }
+            note = n0 + frac;
+            ratio = Math.pow(2, logH);
+        } else {
+            const log_harmonic = Math.log2(data.harmonic) % 1;
+            ratio = Math.pow(2, log_harmonic);
+            note = log_harmonic * edo;
+        }
 
         tooltip.html(`Harmonic: ${data.harmonic}<br/>Amplitude: ${data.amplitude.toFixed(4)}<br/>Error: ${data.error.toFixed(4)}<br/>Note: ${note.toFixed(4)}<br/>Ratio: ${ratio.toFixed(4)}`)
             .style("left", (event.pageX + 10) + "px")
@@ -890,7 +1003,7 @@ function updateAll() {
 }
 
 document.getElementById("edo-input").addEventListener("change", (e) => {
-    const edo = parseInt(e.target.value);
+    customScale = null;
     updateHarmonicCircle();
     updateDissonanceGraph();
 });
@@ -971,5 +1084,5 @@ window.addEventListener("orientationchange", () => {
 
 updateGraphDimensions();
 setDimensions();
-updateHarmonicSeriesFromURL();
+parseURLParameters();
 updateAll();

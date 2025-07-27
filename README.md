@@ -57,3 +57,9 @@ Finally, you can provide a custom series via a URL in the following format:
 [`https://edo.jakim.it/?1.0=1.0&1.75=0.25&2.44=0.1&3=0.05&4.47=0.02`](https://edo.jakim.it/?1.0=1.0&1.75=0.25&2.44=0.1&3=0.05&4.47=0.02)
 
 where each harmonic is set by `harmonic=amplitude` pairs, joined by `&`.
+
+### Custom scale
+
+You can examine non-standard scales. You can provide a custom scale as a series of frequency ratios separated by a comma:
+
+[`https://edo.jakim.it/?scale=1.0,1.2,1.4,1.6,1.8`](https://edo.jakim.it/?scale=1.0,1.2,1.4,1.6,1.8)
