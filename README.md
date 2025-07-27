@@ -63,3 +63,5 @@ where each harmonic is set by `harmonic=amplitude` pairs, joined by `&`.
 You can examine non-standard scales. You can provide a custom scale as a series of frequency ratios separated by a comma:
 
 [`https://edo.jakim.it/?scale=1.0,1.2,1.4,1.6,1.8`](https://edo.jakim.it/?scale=1.0,1.2,1.4,1.6,1.8)
+
+Since the error calculation method is counted in the number of tones, the formula for custom scales cease to make sense as it assumes that each interval is of the same length.
