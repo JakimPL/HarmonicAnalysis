@@ -127,7 +127,7 @@ function distanceToneError(harmonic, log2Scale) {
         minDiff = Math.min(minDiff, diff * diff);
     }
 
-    return minDiff;
+    return minDiff * log2Scale.length * log2Scale.length;
 }
 
 function distanceScaleError(scale, series) {
@@ -140,6 +140,6 @@ function distanceScaleError(scale, series) {
         totalError += amplitude * error;
     }
 
-    return scale.length * Math.sqrt(totalError / maxError);
+    return Math.sqrt(totalError / maxError);
 }
 

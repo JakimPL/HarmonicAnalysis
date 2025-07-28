@@ -14,6 +14,8 @@ let margins = {};
 let harmonics = 32;
 let harmonicSeries = {};
 let customScale = null;
+let customScaleOriginal = null;
+let customLog2Scale = null;
 
 const intervals = [
     { ratio: 1, name: "unison" },
@@ -74,6 +76,8 @@ function parseURLParameters() {
                 .filter((x, i, arr) => i === 0 || Math.abs(x - arr[i - 1]) > EPS);
             if (scaleArr.length > 1) {
                 customScale = scaleArr;
+                customScaleOriginal = scaleArr.slice();
+                customLog2Scale = getLog2Scale(scaleArr);
             }
         }
     }
@@ -819,6 +823,13 @@ function updateEdoError() {
                 tooltip.transition()
                     .duration(500)
                     .style("opacity", 0);
+            })
+            .on("click", function() {
+                if (Array.isArray(customScaleOriginal)) {
+                    customScale = customScaleOriginal.slice();
+                    updateHarmonicCircle();
+                    updateDissonanceGraph();
+                }
             });
         svg.append("text")
             .attr("x", xScale(customPoint.N))
@@ -846,6 +857,7 @@ function updateEdoError() {
 function updateHarmonicCircle() {
     let edo = parseInt(document.getElementById("edo-input").value);
     let scaleToUse = null;
+    let log2ScaleToUse = null;
     let isCustom = false;
     if (Array.isArray(customScale)) {
         scaleToUse = customScale;
@@ -857,6 +869,8 @@ function updateHarmonicCircle() {
         }
         scaleToUse = Array.from({length: edo}, (_, i) => Math.pow(2, i / edo));
     }
+
+    log2ScaleToUse = scaleToUse.map(r => Math.log2(r));
 
     function playHarmonic(harmonic) {
         const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
@@ -984,7 +998,7 @@ function updateHarmonicCircle() {
     Object.entries(harmonicSeries).forEach(([harmonic, amplitude]) => {
         if (amplitude > 0 && harmonic % 2) {
             const angle = (2 * Math.PI * Math.log2(harmonic)) % (2 * Math.PI) - Math.PI / 2;
-            const error = toneError(harmonic, edo);
+            const error = Array.isArray(customLog2Scale) ? distanceToneError(harmonic, log2ScaleToUse) : toneError(harmonic, edo);
             const color = colorScale(error);
             const barStart = radius;
             const barEnd = radius * (1.05 + (amplitude / maxAmplitude) * 0.5);
