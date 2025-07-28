@@ -317,6 +317,15 @@ function updateHarmonicSeries() {
         }
     });
 
+    harmonicsSvg.on("mouseleave", function () {
+        if (isDragging) {
+            isDragging = false;
+            updateDissonanceGraph();
+            updateEdoError();
+            updateHarmonicCircle();
+        }
+    });
+
     harmonicsSvg.on("touchstart", function(event) {
         if (event.cancelable) event.preventDefault();
         isTouchDragging = true;
