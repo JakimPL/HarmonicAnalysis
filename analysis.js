@@ -58,39 +58,57 @@ const urlParams = new URLSearchParams(window.location.search);
 
 
 function parseURLParameters() {
-    const newHarmonicSeries = {};
+    parseCustomScale();
+    const newHarmonicSeries = parseHarmonicSeries();
+    assignHarmonicSeries(newHarmonicSeries);
+}
 
+function parseCustomScale() {
     if (urlParams.has("scale")) {
         const scaleStr = urlParams.get("scale");
         if (scaleStr) {
-            let scaleArr = [1.0];
-            scaleArr = scaleArr.concat(
-                scaleStr.split(",")
-                    .map(Number)
-                    .filter(x => !isNaN(x) && x !== 0)
-                    .map(x => 2 ** (((Math.log2(Math.abs(x)) % 1) + 1) % 1))
-            );
-            const EPS = 1e-8;
-            scaleArr = scaleArr.filter(x => x > 0)
-                .sort((a, b) => a - b)
-                .filter((x, i, arr) => i === 0 || Math.abs(x - arr[i - 1]) > EPS);
-            if (scaleArr.length > 1) {
-                customScale = scaleArr;
-                customScaleOriginal = scaleArr.slice();
-                customLog2Scale = getLog2Scale(scaleArr);
-            }
+            const scaleArr = cleanCustomScale(scaleStr);
+            assignCustomScale(scaleArr);
         }
     }
+}
 
+function cleanCustomScale(scaleStr) {
+    let scaleArr = [1.0];
+    scaleArr = scaleArr.concat(
+        scaleStr.split(",")
+            .map(Number)
+            .filter(x => !isNaN(x) && x !== 0)
+            .map(x => 2 ** (((Math.log2(Math.abs(x)) % 1) + 1) % 1))
+    );
+    const EPS = 1e-8;
+    scaleArr = scaleArr.filter(x => x > 0)
+        .sort((a, b) => a - b)
+        .filter((x, i, arr) => i === 0 || Math.abs(x - arr[i - 1]) > EPS);
+    return scaleArr;
+}
+
+function assignCustomScale(scaleArr) {
+    if (scaleArr.length > 1) {
+        customScale = scaleArr;
+        customScaleOriginal = scaleArr.slice();
+        customLog2Scale = getLog2Scale(scaleArr);
+    }
+}
+
+function parseHarmonicSeries() {
+    const newHarmonicSeries = {};
     urlParams.forEach((value, key) => {
         const harmonic = parseFloat(key);
         const amplitude = parseFloat(value);
-
         if (!isNaN(harmonic) && !isNaN(amplitude) && harmonic > 0 && amplitude >= 0 && amplitude <= 1) {
             newHarmonicSeries[harmonic] = amplitude;
         }
     });
+    return newHarmonicSeries;
+}
 
+function assignHarmonicSeries(newHarmonicSeries) {
     if (Object.keys(newHarmonicSeries).length > 0) {
         harmonicSeries = newHarmonicSeries;
     } else {
