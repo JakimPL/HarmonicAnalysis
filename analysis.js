@@ -66,7 +66,7 @@ function parseURLParameters() {
                 scaleStr.split(",")
                     .map(Number)
                     .filter(x => !isNaN(x) && x !== 0)
-                    .map(x => 2 ** (Math.log2(Math.abs(x)) % 1))
+                    .map(x => 2 ** (((Math.log2(Math.abs(x)) % 1) + 1) % 1))
             );
             const EPS = 1e-8;
             scaleArr = scaleArr.filter(x => x > 0)
@@ -370,7 +370,7 @@ function updateDissonanceGraph() {
         .attr("width", width)
         .attr("height", height);
 
-    if (Array.isArray(customScale) && customScale.length > 0) {
+    if (Array.isArray(customScale)) {
         customScale.forEach((ratio) => {
             if (ratio >= 1 && ratio <= 2) {
                 const xPos = x(ratio);
@@ -491,7 +491,7 @@ function updateDissonanceGraph() {
             }
         }
 
-        if (Array.isArray(customScale) && customScale.length > 0) {
+        if (Array.isArray(customScale)) {
             let closest = customScale[0];
             let minDiff = Math.abs(ratio - closest);
             for (let i = 1; i < customScale.length; i++) {
@@ -678,15 +678,28 @@ function updateEdoError() {
     }
 
     for (let edo = minEdo; edo <= maxEdo; edo++) {
-        data.push({ edo: edo, error: scaleError(edo, series) });
+        if (customScale) {
+            const scale = Array.from({length: edo}, (_, i) => Math.pow(2, i / edo));
+            data.push({ edo: edo, error: distanceScaleError(scale, series) });
+        } else {
+            data.push({ edo: edo, error: scaleError(edo, series) });
+        }
+    }
+
+    let customPoint = null;
+    if (Array.isArray(customScale)) {
+        let customError = distanceScaleError(customScale, series);
+        customPoint = { N: customScale.length, error: customError };
     }
 
     const xScale = d3.scaleLinear()
         .domain([minEdo - 1, maxEdo + 1])
         .range([0, graphWidth]);
 
+    const customError = customPoint ? customPoint.error : 0;
+    const maxError = Math.max(customError, d3.max(data, d => d.error));
     const yScale = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.error) + 0.05])
+        .domain([0, maxError + 0.05])
         .range([graphHeight, 0]);
 
     edoErrorSvg.selectAll("*").remove();
@@ -777,6 +790,46 @@ function updateEdoError() {
             hideTooltip();
         });
 
+    if (customPoint) {
+        svg.append("circle")
+            .attr("cx", xScale(customPoint.N))
+            .attr("cy", yScale(customPoint.error))
+            .attr("r", 4)
+            .attr("fill", "#e07b39")
+            .attr("stroke", "#b36a5e")
+            .attr("stroke-width", 1.5)
+            .attr("class", "edo-error-custom-point")
+            .on("mouseover", function(event) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("fill", "#ffb97a");
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html(`N: ${customPoint.N}<br/>Error: ${customPoint.error.toFixed(4)}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("fill", "#e07b39");
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
+        svg.append("text")
+            .attr("x", xScale(customPoint.N))
+            .attr("y", yScale(customPoint.error) - 10)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "11px")
+            .attr("fill", "#e07b39")
+            .attr("font-weight", "bold")
+            .text("C");
+    }
+
     svg.selectAll(".edo-label")
         .data(data)
         .join("text")
@@ -794,7 +847,7 @@ function updateHarmonicCircle() {
     let edo = parseInt(document.getElementById("edo-input").value);
     let scaleToUse = null;
     let isCustom = false;
-    if (Array.isArray(customScale) && customScale.length > 0) {
+    if (Array.isArray(customScale)) {
         scaleToUse = customScale;
         isCustom = true;
     } else {

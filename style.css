@@ -105,7 +105,6 @@ body {
     color: #0d47a1;
     text-decoration: underline;
 }
-}
 
 .description h1 {
     font-size: 24px;
@@ -320,7 +319,7 @@ input[type="number"] {
 
 :root {
     --gap: 40px;
-    --padding-x: 80px;
+    --padding-x: 120px;
     --padding-y: 120px;
     --width: 450px;
     --height: 250px;

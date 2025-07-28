@@ -101,8 +101,8 @@ function toneError(harmonic, edo) {
 
 function scaleError(edo, series) {
     const maxError = 0.25 * Object.values(series).reduce((a, b) => a + b, 0);
-    let totalError = 0.0;
 
+    let totalError = 0.0;
     for (const [harmonic, amplitude] of Object.entries(series)) {
         const error = toneError(harmonic, edo);
         totalError += error * amplitude;
@@ -110,3 +110,36 @@ function scaleError(edo, series) {
 
     return Math.sqrt(totalError / maxError);
 }
+
+function getLog2Scale(scale) {
+    let log2Scale = Array.from(new Set(scale.map(x => ((Math.log2(x) % 1) + 1) % 1)));
+    log2Scale.sort((a, b) => a - b);
+    if (log2Scale[log2Scale.length - 1] < 1.0 - 1e-8) log2Scale.push(1.0);
+
+    return log2Scale;
+}
+
+function distanceToneError(harmonic, log2Scale) {
+    const x = ((Math.log2(harmonic) % 1) + 1) % 1;
+    let minDiff = Infinity;
+    for (let i = 0; i < log2Scale.length; i++) {
+        let diff = x - log2Scale[i];
+        minDiff = Math.min(minDiff, diff * diff);
+    }
+
+    return minDiff;
+}
+
+function distanceScaleError(scale, series) {
+    const maxError = Object.values(series).reduce((a, b) => a + b, 0);
+    const log2Scale = getLog2Scale(scale);
+
+    let totalError = 0.0;
+    for (const [harmonic, amplitude] of Object.entries(series)) {
+        const error = distanceToneError(harmonic, log2Scale);
+        totalError += amplitude * error;
+    }
+
+    return scale.length * Math.sqrt(totalError / maxError);
+}
+
