@@ -318,9 +318,8 @@ input[type="number"] {
 }
 
 :root {
-    --gap: 40px;
-    --padding-x: 120px;
-    --padding-y: 120px;
+    --padding-x: 50px;
+    --padding-y: 50px;
     --width: 450px;
     --height: 250px;
     --margin-top: 20px;

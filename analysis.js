@@ -129,15 +129,20 @@ function updateGraphDimensions() {
     const gap = parseInt(root.getPropertyValue('--gap'));
     const paddingX = parseInt(root.getPropertyValue('--padding-x'));
     const paddingY = parseInt(root.getPropertyValue('--padding-y'));
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
 
-    if (vw < vh) {
-        baseWidth = vw - 2 * paddingX;
-        baseHeight = (vh - 3 * gap - 2 * paddingY) / 4;
+    const graphElem = document.querySelector('.graph');
+    if (!graphElem) return;
+
+    const rect = graphElem.getBoundingClientRect();
+    const graphWidth = rect.width;
+    const graphHeight = rect.height;
+
+    if (graphWidth < graphHeight) {
+        baseWidth = graphWidth - 2 * paddingX;
+        baseHeight = graphHeight - 2 * paddingY;
     } else {
-        baseWidth = (vw - gap - 2 * paddingX) / 2;
-        baseHeight = (vh - gap - 2 * paddingY) / 2;
+        baseWidth = graphWidth - 2 * paddingX;
+        baseHeight = graphHeight - 2 * paddingY;
     }
 
     document.documentElement.style.setProperty('--width', `${baseWidth}px`);
@@ -1126,8 +1131,8 @@ document.querySelectorAll('.enlarge-icon').forEach(icon => {
             const computedStyle = getComputedStyle(document.documentElement);
             const paddingX = parseInt(computedStyle.getPropertyValue('--padding-x')) || 0;
             const paddingY = parseInt(computedStyle.getPropertyValue('--padding-y')) || 0;
-            let fullscreenWidth = window.innerWidth - 2 * paddingX;
-            let fullscreenHeight = window.innerHeight - 2 * paddingY;
+            let fullscreenWidth = window.innerWidth - 4 * paddingX;
+            let fullscreenHeight = window.innerHeight - 4 * paddingY;
             if (window.innerHeight > window.innerWidth) {
                 const size = Math.min(fullscreenWidth, fullscreenHeight);
                 fullscreenWidth = size;
