@@ -97,14 +97,24 @@ function assignCustomScale(scaleArr) {
 }
 
 function parseHarmonicSeries() {
-    const newHarmonicSeries = {};
+    let newHarmonicSeries = {};
     urlParams.forEach((value, key) => {
         const harmonic = parseFloat(key);
         const amplitude = parseFloat(value);
-        if (!isNaN(harmonic) && !isNaN(amplitude) && harmonic > 0 && amplitude >= 0 && amplitude <= 1) {
+        let maxAmplitude = 1.0;
+        if (!isNaN(harmonic) && !isNaN(amplitude) && harmonic > 0 && amplitude >= 0) {
             newHarmonicSeries[harmonic] = amplitude;
+            if (amplitude > maxAmplitude) {
+                maxAmplitude = amplitude;
+            }
         }
+
+        newHarmonicSeries = Object.fromEntries(
+            Object.entries(newHarmonicSeries)
+                .map(([key, value]) => [key, value / maxAmplitude])
+        );
     });
+
     return newHarmonicSeries;
 }
 
