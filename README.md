@@ -65,3 +65,11 @@ You can examine non-standard scales. You can provide a custom scale as a series 
 [`https://edo.jakim.it/?scale=1.0,1.2,1.4,1.6,1.8`](https://edo.jakim.it/?scale=1.0,1.2,1.4,1.6,1.8)
 
 Since the error calculation method is counted in the number of tones, the formula for custom scales cease to make sense as it assumes that each interval is of the same length.
+
+A distance-based formula is being used instead:
+
+![Equation](https://latex.codecogs.com/png.image?e=\sum_{n=1}^{&plus;\infty}|S|\sqrt{a_n\min_{s\in&space;S}\left(x_n-s\right)^2})
+
+where:
+- `S` is the scale of log2 frequency ratio (modulo 1)
+- `x_n` is the pitch value (`log₂(n) mod 1`)

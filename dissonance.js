@@ -120,7 +120,7 @@ function getLog2Scale(scale) {
 }
 
 function distanceToneError(harmonic, log2Scale) {
-    const x = ((Math.log2(harmonic) % 1) + 1) % 1;
+    const x = Math.log2(harmonic) % 1;
     let minDiff = Infinity;
     for (let i = 0; i < log2Scale.length; i++) {
         let diff = x - log2Scale[i];

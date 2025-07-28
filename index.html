@@ -138,6 +138,17 @@
                     class="code-block"><code><a href="https://edo.jakim.it/?scale=1.0,1.2,1.4,1.6,1.8" target="_blank" rel="noopener">https://edo.jakim.it/?scale=1.0,1.2,1.4,1.6,1.8</a></code></pre>
                 <p>Since the error calculation method is counted in the number of tones, the formula for custom scales
                     cease to make sense as it assumes that each interval is of the same length.</p>
+                <p>A distance-based formula is being used instead:</p>
+                <div class="formula-block">
+                    <span class="formula-label">Error formula:</span>
+                    <div class="formula-math">$$e = \sum_{n=1}^{+\infty}|S|\sqrt{a_n \min_{s\in S}\left(x_n -
+                        s\right)^2}$$</div>
+                    <ul>
+                        <li>$S$ is the scale: a set composed of $\log_2$-values of the scale frequency ratios (modulo 1)
+                        </li>
+                        <li>$x_n$ is the pitch value: $\log_2 n \pmod{1}$</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
