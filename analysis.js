@@ -366,10 +366,9 @@ function updateHarmonicSeries() {
 function updateDissonanceGraph() {
     const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
     const edo = parseInt(document.getElementById("edo-input").value) || 12;
-
     const series = { ...harmonicSeries };
-
     const graph = getDissonanceGraph(series, baseFrequency);
+    const points = graph.ratios.map((ratio, i) => [ratio, graph.values[i]]);
 
     const x = d3.scaleLog()
         .range([margins.left, width - margins.right])
@@ -382,9 +381,6 @@ function updateDissonanceGraph() {
     const line = d3.line()
         .x(d => x(d[0]))
         .y(d => y(d[1]));
-
-    const points = graph.ratios.map((ratio, i) => [ratio, graph.values[i]]);
-
 
     dissonanceSvg.selectAll("*").remove();
 
@@ -545,50 +541,66 @@ function updateDissonanceGraph() {
         }
     }
 
+    function combineAndPlayWaves(ratio) {
+        ratio = getSnappedRatio(ratio, edo)[0];
+        const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
+        const waveform = createWaveform(harmonicSeries);
+        const envelopedWave = applyEnvelope(waveform);
+        const combinedWave = combineWaves(envelopedWave, ratio);
+        playSound(combinedWave, baseFrequency, SOUND_DURATION);
+    }
+
+    function prepareNoteText(ratio, edo, snapType) {
+        let noteText = null;
+        if (snapType === 'edo') {
+            const logRatio = Math.log2(ratio);
+            const note = Math.round(logRatio * edo);
+            noteText = `Note: ${note}`;
+        } else if (snapType === 'custom') {
+            const idx = customScale.findIndex(r => Math.abs(r - ratio) < 1e-8);
+            if (idx !== -1) noteText = `Note: ${idx}`;
+        } else if (snapType === 'interval') {
+            const interval = intervals.find(i => Math.abs(i.ratio - ratio) < 1e-8);
+            if (interval) noteText = interval.name;
+        }
+        return noteText;
+    }
+
+    function showDissonanceHover(mouseX) {
+        let ratio = x.invert(mouseX);
+        if (ratio >= 1 && ratio <= 2) {
+            let snapType;
+            [ratio, snapType] = getSnappedRatio(ratio, edo);
+            const noteText = prepareNoteText(ratio, edo, snapType);
+            const value = graph.function(ratio) * graph.normalizer;
+            const xPos = x(ratio);
+            const yPos = y(value);
+            const ratioText = `${ratio.toFixed(4)} : ${value.toFixed(4)}`;
+            const lines = noteText ? [noteText, ratioText] : [ratioText];
+            hoverPoint
+                .attr("cx", xPos)
+                .attr("cy", yPos)
+                .style("opacity", 1);
+            hoverLabel
+                .attr("x", xPos)
+                .attr("y", yPos - 10 - (lines.length - 1) * 15)
+                .html(() => lines.map((line, i) => `<tspan x=\"${xPos}\" dy=\"${i === 0 ? 0 : 15}\">${line}</tspan>`).join(""))
+                .style("opacity", 1)
+                .style("fill", "black");
+            const textBBox = hoverLabel.node().getBBox();
+            hoverBox
+                .attr("x", textBBox.x - 5)
+                .attr("y", textBBox.y - 2)
+                .attr("width", textBBox.width + 10)
+                .attr("height", textBBox.height + 4)
+                .style("opacity", 1);
+        }
+    }
+
     overlay
         .on("mousemove", function(event) {
             const mouseX = d3.pointer(event)[0];
-            let ratio = x.invert(mouseX);
-            let snapped = false;
-            if (ratio >= 1 && ratio <= 2) {
-                const edo = parseInt(document.getElementById("edo-input").value) || 12;
-                let snapType;
-                [ratio, snapType] = getSnappedRatio(ratio, edo);
-                let noteText = null;
-                if (snapType === 'edo') {
-                    const logRatio = Math.log2(ratio);
-                    const note = Math.round(logRatio * edo);
-                    noteText = `Note: ${note}`;
-                } else if (snapType === 'custom') {
-                    const idx = customScale.findIndex(r => Math.abs(r - ratio) < 1e-8);
-                    if (idx !== -1) noteText = `Note: ${idx}`;
-                } else if (snapType === 'interval') {
-                    const interval = intervals.find(i => Math.abs(i.ratio - ratio) < 1e-8);
-                    if (interval) noteText = interval.name;
-                }
-                const value = graph.function(ratio) * graph.normalizer;
-                const xPos = x(ratio);
-                const yPos = y(value);
-                const ratioText = `${ratio.toFixed(4)} : ${value.toFixed(4)}`;
-                const lines = noteText ? [noteText, ratioText] : [ratioText];
-                hoverPoint
-                    .attr("cx", xPos)
-                    .attr("cy", yPos)
-                    .style("opacity", 1);
-                hoverLabel
-                    .attr("x", xPos)
-                    .attr("y", yPos - 10 - (lines.length - 1) * 15)
-                    .html(() => lines.map((line, i) => `<tspan x=\"${xPos}\" dy=\"${i === 0 ? 0 : 15}\">${line}</tspan>`).join(""))
-                    .style("opacity", 1)
-                    .style("fill", "black");
-                const textBBox = hoverLabel.node().getBBox();
-                hoverBox
-                    .attr("x", textBBox.x - 5)
-                    .attr("y", textBBox.y - 2)
-                    .attr("width", textBBox.width + 10)
-                    .attr("height", textBBox.height + 4)
-                    .style("opacity", 1);
-            }
+            showDissonanceHover(mouseX);
         })
         .on("mouseout", function() {
             hoverPoint.style("opacity", 0);
@@ -599,13 +611,7 @@ function updateDissonanceGraph() {
             const mouseX = d3.pointer(event)[0];
             let ratio = x.invert(mouseX);
             if (ratio >= 1 && ratio <= 2) {
-                const edo = parseInt(document.getElementById("edo-input").value) || 12;
-                ratio = getSnappedRatio(ratio, edo)[0];
-                const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
-                const waveform = createWaveform(harmonicSeries);
-                const envelopedWave = applyEnvelope(waveform);
-                const combinedWave = combineWaves(envelopedWave, ratio);
-                playSound(combinedWave, baseFrequency, SOUND_DURATION);
+                combineAndPlayWaves(ratio);
             }
         })
         .on("touchstart", function(event) {
@@ -617,63 +623,23 @@ function updateDissonanceGraph() {
             if (!touch) return;
             const svgRect = dissonanceSvg.node().getBoundingClientRect();
             const mouseX = touch.clientX - svgRect.left;
-            let ratio = x.invert(mouseX);
-            let snapped = false;
-            if (ratio >= 1 && ratio <= 2) {
-                const edo = parseInt(document.getElementById("edo-input").value) || 12;
-                let snapType;
-                [ratio, snapType] = getSnappedRatio(ratio, edo);
-                let noteText = null;
-                if (snapType === 'edo') {
-                    const logRatio = Math.log2(ratio);
-                    const note = Math.round(logRatio * edo);
-                    noteText = `EDO note: ${note}`;
-                } else if (snapType === 'custom') {
-                    const idx = customScale.findIndex(r => Math.abs(r - ratio) < 1e-8);
-                    if (idx !== -1) noteText = `Scale note: ${idx}`;
-                } else if (snapType === 'interval') {
-                    const interval = intervals.find(i => Math.abs(i.ratio - ratio) < 1e-8);
-                    if (interval) noteText = interval.name;
-                }
-                const value = graph.function(ratio) * graph.normalizer;
-                const xPos = x(ratio);
-                const yPos = y(value);
-                const ratioText = `${ratio.toFixed(4)} : ${value.toFixed(4)}`;
-                const lines = noteText ? [noteText, ratioText] : [ratioText];
-                hoverPoint
-                    .attr("cx", xPos)
-                    .attr("cy", yPos)
-                    .style("opacity", 1);
-                hoverLabel
-                    .attr("x", xPos)
-                    .attr("y", yPos - 10 - (lines.length - 1) * 15)
-                    .html(() => lines.map((line, i) => `<tspan x=\"${xPos}\" dy=\"${i === 0 ? 0 : 15}\">${line}</tspan>`).join(""))
-                    .style("opacity", 1)
-                    .style("fill", "black");
-                const textBBox = hoverLabel.node().getBBox();
-                hoverBox
-                    .attr("x", textBBox.x - 5)
-                    .attr("y", textBBox.y - 2)
-                    .attr("width", textBBox.width + 10)
-                    .attr("height", textBBox.height + 4)
-                    .style("opacity", 1);
-            }
+            showDissonanceHover(mouseX);
         }, { passive: false })
         .on("touchend", function(event) {
-            if (event.cancelable) event.preventDefault();
+            if (event.cancelable) {
+                event.preventDefault();
+            }
+
             const touch = event.changedTouches && event.changedTouches[0] ? event.changedTouches[0] : (event.touches && event.touches[0]);
-            if (!touch) return;
+            if (!touch) {
+                return;
+            }
+
             const svgRect = dissonanceSvg.node().getBoundingClientRect();
             const mouseX = touch.clientX - svgRect.left;
             let ratio = x.invert(mouseX);
             if (ratio >= 1 && ratio <= 2) {
-                const edo = parseInt(document.getElementById("edo-input").value) || 12;
-                ratio = getSnappedRatio(ratio, edo)[0];
-                const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
-                const waveform = createWaveform(harmonicSeries);
-                const envelopedWave = applyEnvelope(waveform);
-                const combinedWave = combineWaves(envelopedWave, ratio);
-                playSound(combinedWave, baseFrequency, SOUND_DURATION);
+                combineAndPlayWaves(ratio);
             }
         }, { passive: false });
 }
@@ -872,8 +838,7 @@ function updateEdoError() {
         .on("mouseout", hideTooltip);
 }
 
-function updateHarmonicCircle() {
-    let edo = parseInt(document.getElementById("edo-input").value);
+function getScaleToUse(edo) {
     let scaleToUse = null;
     let log2ScaleToUse = null;
     let isCustom = false;
@@ -889,13 +854,29 @@ function updateHarmonicCircle() {
     }
 
     log2ScaleToUse = scaleToUse.map(r => Math.log2(r));
+    return [scaleToUse, log2ScaleToUse, isCustom];
+}
 
-    function playHarmonic(harmonic) {
-        const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
-        const wave = createWaveform(harmonicSeries);
-        const factor = Math.pow(2, Math.log2(harmonic) % 1);
-        const envelopedWave = applyEnvelope(wave, SOUND_DURATION, 0.5);
-        playSound(envelopedWave, baseFrequency * factor, SOUND_DURATION);
+function playHarmonic(harmonic) {
+    const baseFrequency = parseFloat(document.getElementById("base-frequency").value) || 220;
+    const wave = createWaveform(harmonicSeries);
+    const factor = Math.pow(2, Math.log2(harmonic) % 1);
+    const envelopedWave = applyEnvelope(wave, SOUND_DURATION, 0.5);
+    playSound(envelopedWave, baseFrequency * factor, SOUND_DURATION);
+}
+
+function updateHarmonicCircle() {
+    let edo = parseInt(document.getElementById("edo-input").value) || 12;
+    let [scaleToUse, log2ScaleToUse, isCustom] = getScaleToUse(edo);
+
+    function calculateAngle(ratio, i) {
+        let angle;
+        if (isCustom) {
+            angle = 2 * Math.PI * (Math.log2(ratio) % 1) - Math.PI / 2;
+        } else {
+            angle = (2 * Math.PI * i) / scaleToUse.length - Math.PI / 2;
+        }
+        return angle;
     }
 
     const radius = (height / 2 - margins.top) * 0.75;
@@ -926,12 +907,8 @@ function updateHarmonicCircle() {
 
     for (let i = 0; i < scaleToUse.length; i++) {
         const ratio = scaleToUse[i];
-        let angle;
-        if (isCustom) {
-            angle = 2 * Math.PI * (Math.log2(ratio) % 1) - Math.PI / 2;
-        } else {
-            angle = (2 * Math.PI * i) / scaleToUse.length - Math.PI / 2;
-        }
+        const angle = calculateAngle(ratio, i);
+
         const x1 = center + radius * Math.cos(angle);
         const y1 = center + radius * Math.sin(angle);
         const x2 = center + (radius + 40) * Math.cos(angle);
@@ -968,6 +945,40 @@ function updateHarmonicCircle() {
             });
     }
 
+    function interpolateNote(data) {
+        const logH = Math.log2(data.harmonic) % 1;
+        const scale = scaleToUse;
+        const scaleWith2 = scale[scale.length - 1] < 2.0 - 1e-8 ? [...scale, 2.0] : scale;
+        const logScaleWith2 = scaleWith2.map(r => Math.log2(r));
+
+        let idx = 0;
+        while (idx < logScaleWith2.length - 1 && logH > logScaleWith2[idx + 1] - 1e-8) {
+            idx++;
+        }
+        if (idx >= logScaleWith2.length - 1) {
+            idx = logScaleWith2.length - 2;
+        }
+
+        const l0 = logScaleWith2[idx];
+        const l1 = logScaleWith2[idx + 1];
+        const n0 = idx;
+        const n1 = idx + 1;
+        let frac = 0;
+        if (l1 - l0 > 1e-8) {
+            frac = (logH - l0) / (l1 - l0);
+        }
+        note = n0 + frac;
+        ratio = Math.pow(2, logH);
+        return [note, ratio];
+    }
+
+    function getEdoNote(data) {
+        const logHarmonic = Math.log2(data.harmonic) % 1;
+        const ratio = Math.pow(2, logHarmonic);
+        const note = logHarmonic * edo;
+        return [note, ratio];
+    }
+
     function showTooltip(event, data) {
         tooltip.transition()
             .duration(200)
@@ -975,31 +986,10 @@ function updateHarmonicCircle() {
 
         let note = null;
         let ratio = null;
-        if (isCustom && Array.isArray(scaleToUse) && scaleToUse.length > 1) {
-            const logH = Math.log2(data.harmonic) % 1;
-            const scale = scaleToUse;
-            const logScale = scale.map(r => Math.log2(r));
-            const scaleWith2 = scale[scale.length - 1] < 2.0 - 1e-8 ? [...scale, 2.0] : scale;
-            const logScaleWith2 = scaleWith2.map(r => Math.log2(r));
-            let idx = 0;
-            while (idx < logScaleWith2.length - 1 && logH > logScaleWith2[idx + 1] - 1e-8) {
-                idx++;
-            }
-            if (idx >= logScaleWith2.length - 1) idx = logScaleWith2.length - 2;
-            const l0 = logScaleWith2[idx];
-            const l1 = logScaleWith2[idx + 1];
-            const n0 = idx;
-            const n1 = idx + 1;
-            let frac = 0;
-            if (l1 - l0 > 1e-8) {
-                frac = (logH - l0) / (l1 - l0);
-            }
-            note = n0 + frac;
-            ratio = Math.pow(2, logH);
+        if (isCustom && Array.isArray(scaleToUse)) {
+            [note, ratio] = interpolateNote(data);
         } else {
-            const log_harmonic = Math.log2(data.harmonic) % 1;
-            ratio = Math.pow(2, log_harmonic);
-            note = log_harmonic * edo;
+            [note, ratio] = getEdoNote(data);
         }
 
         tooltip.html(`Harmonic: ${data.harmonic}<br/>Amplitude: ${data.amplitude.toFixed(4)}<br/>Error: ${data.error.toFixed(4)}<br/>Note: ${note.toFixed(4)}<br/>Ratio: ${ratio.toFixed(4)}`)
@@ -1125,7 +1115,6 @@ document.querySelectorAll('.enlarge-icon').forEach(icon => {
             document.querySelectorAll('.graph').forEach(g => g.classList.remove('fullscreen'));
             graph.classList.add('fullscreen');
             const computedStyle = getComputedStyle(document.documentElement);
-            const gap = parseInt(computedStyle.getPropertyValue('--gap')) || 0;
             const paddingX = parseInt(computedStyle.getPropertyValue('--padding-x')) || 0;
             const paddingY = parseInt(computedStyle.getPropertyValue('--padding-y')) || 0;
             let fullscreenWidth = window.innerWidth - 2 * paddingX;
