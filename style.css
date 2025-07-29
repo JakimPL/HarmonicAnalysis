@@ -7,6 +7,10 @@ body {
     min-height: 100vh;
 }
 
+h2 {
+    margin: 0 0 15px 0;
+}
+
 .description {
     max-width: 1200px;
     margin: 32px auto 24px auto;
@@ -211,8 +215,32 @@ body {
     pointer-events: none;
 }
 
-h2 {
-    margin: 0 0 15px 0;
+.references-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 18px 0 0 0;
+}
+
+.reference-item {
+    background: #e6f9e6;
+    border-left: 4px solid #4caf50;
+    border-radius: 7px;
+    margin-bottom: 14px;
+    padding: 14px 18px 10px 18px;
+    color: #234d23;
+    box-shadow: 0 1px 4px rgba(76, 175, 80, 0.07);
+    font-size: 1em;
+}
+
+.reference-item a {
+    color: #388e3c;
+    font-weight: 500;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.reference-item a:hover {
+    color: #1b5e20;
 }
 
 #harmonics,

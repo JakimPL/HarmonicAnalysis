@@ -2,13 +2,13 @@ const POINTS = 1000;
 
 function score(sine1, sine2) {
     const f1 = sine1.frequency;
-    const l1 = sine1.amplitude;
+    const l1 = sine1.amplitude / Math.sqrt(2);
     const f2 = sine2.frequency;
-    const l2 = sine2.amplitude;
+    const l2 = sine2.amplitude / Math.sqrt(2);
 
-    const x = 0.24
-    const s1 = 0.0207
-    const s2 = 18.96
+    const x = 0.24;
+    const s1 = 0.0207;
+    const s2 = 18.96;
     const fmin = Math.min(f1, f2);
     const fmax = Math.max(f1, f2);
     const s = x / (s1 * fmin + s2);

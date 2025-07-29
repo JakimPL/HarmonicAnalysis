@@ -1,4 +1,7 @@
+
 # Musical Harmony Analysis Tool
+
+This interactive tool allows you to explore the relationship between harmonic series and tuning systems, focusing on dissonance and scale alignment errors. Experiment with harmonics, dissonance, EDO alignment errors, and more, using real-time audio and intuitive visualizations.
 
 ## Features
 
@@ -7,8 +10,24 @@ This interactive tool helps explore musical harmony through four connected visua
 - **Harmonic Series:**
   Drag the blue bars to adjust the strength of each harmonic. These changes affect how the sound will be produced.
 
+
 - **Dissonance Graph:**
   Shows how pleasant or harsh two notes sound together at different intervals. Click anywhere on the line to hear the sound. You can change the base note frequency below the graph.
+
+  The dissonance graph is based on a model of the empirical Plomp-Levelt dissonance curve. Sethares models it as a difference of exponential functions:
+
+  ![Equation](https://latex.codecogs.com/png.latex?d(x)%3De%5E%7B-b_1%20x%7D-e%5E%7B-b_2%20x%7D)
+
+  where `b_1` and `b_2` are constants that define the curve's shape (`b_1 = 3.5` and `b_2 = 5.75` are the default values used in the model). The dissonance between two tones of frequencies `f_1` and `f_2` and loudness `l_1` and `l_2`, respectively, is given by:
+
+  ![Equation](https://latex.codecogs.com/png.latex?d(f_1,f_2,l_1,l_2)%3Dl_%7B12%7D%5B%20e%5E%7B-b_1s(f_2-f_1)%7D-e%5E%7B-b_2s(f_2-f_1)%7D%20%5D)
+
+  where:
+  - `f_1 < f_2`
+  - `l_12 = min(l_1, l_2)`
+  - `s = 0.24 / (0.0207 f_1 + 18.96)`
+
+# Advanced editing
 
 - **EDO Error Graph:**
   Displays how well different Equal Division of Octave (EDO) systems match our harmonic series. Common Western music uses 12-EDO. Click any point to see its representation in the circle.
@@ -73,3 +92,8 @@ A distance-based formula is being used instead:
 where:
 - `S` is the scale of log2 frequency ratio (modulo 1)
 - `x_n` is the pitch value (`log₂(n) mod 1`)
+
+## References
+
+- Plomp, R., & Levelt, W. J. M. (1965). **Tonal Consonance and Critical Bandwidth**. *Journal of the Acoustical Society of America, 38*(4), 548–560. [doi:10.1121/1.1909741](https://doi.org/10.1121/1.1909741)
+- Sethares, W. A. (2005). **Tuning, Timbre, Spectrum, Scale** (2nd ed.). Springer. [Springer Link](https://link.springer.com/book/10.1007/b138848)
